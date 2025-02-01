@@ -1,4 +1,4 @@
-![example event parameter](https://github.com/temofey1989/kotlin-telegram-flow/actions/workflows/build.yml/badge.svg?branch=main)
+[![Build](https://github.com/temofey1989/kotlin-telegram-flow/actions/workflows/build.yml/badge.svg)](https://github.com/temofey1989/kotlin-telegram-flow/actions/workflows/build.yml)
 [![Code Quality](https://github.com/temofey1989/kotlin-telegram-flow/actions/workflows/code-quality.yml/badge.svg)](https://github.com/temofey1989/kotlin-telegram-flow/actions/workflows/code-quality.yml)
 [![GitHub license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](https://www.apache.org/licenses/LICENSE-2.0)
 
