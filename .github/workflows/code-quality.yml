@@ -1,11 +1,13 @@
-name: Qodana
+name: Code Quality
+
 on:
-  workflow_dispatch:
   pull_request:
+    types: [ opened, synchronize, reopened ]
+    branches:
+      - main
   push:
-    branches: # Specify your branches here
-      - main # The 'main' branch
-      - 'releases/*' # The release branches
+    branches:
+      - main
 
 jobs:
   qodana:
@@ -14,15 +16,23 @@ jobs:
       contents: write
       pull-requests: write
       checks: write
+      security-events: write
     steps:
-      - uses: actions/checkout@v3
+
+      - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}  # to check out the actual pull request commit, not the merge commit
           fetch-depth: 0  # a full history is required for pull request analysis
+
       - name: 'Qodana Scan'
         uses: JetBrains/qodana-action@v2024.3
         with:
           pr-mode: false
+#          args: --baseline,qodana.sarif.json
         env:
-          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN_694880859 }}
+          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
           QODANA_ENDPOINT: 'https://qodana.cloud'
+
+#      - uses: github/codeql-action/upload-sarif@v3
+#        with:
+#          sarif_file: ${{ runner.temp }}/qodana/results/qodana.sarif.json
