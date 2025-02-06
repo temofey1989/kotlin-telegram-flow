@@ -3,9 +3,12 @@ package io.justdevit.telegram.flow.i18n
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.vdurmont.emoji.EmojiParser
+import org.kodein.emoji.Emoji
+import org.kodein.emoji.EmojiTemplateCatalog
+import org.kodein.emoji.list
 
 private const val UNDEFINED_LANGUAGE_VALUE = ""
+private val catalog = EmojiTemplateCatalog(Emoji.list())
 
 /**
  * Represents a text entity with language-specific translations. This class is designed
@@ -22,7 +25,7 @@ data class Text(val language: String? = null, private val values: Map<String, St
         return params
             .keys
             .fold(text) { acc, k -> acc.replace("{$k}", params[k].toString().escapeMarkdown()) }
-            .let { EmojiParser.parseToUnicode(it) }
+            .let { catalog.replace(it) }
     }
 }
 

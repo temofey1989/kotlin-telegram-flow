@@ -44,7 +44,7 @@ dependencies {
 
     // Other
     api("com.squareup.retrofit2:retrofit:$retrofitVersion")
-    api("com.vdurmont:emoji-java:$emojiVersion")
+    api("org.kodein.emoji:emoji-kt:$emojiVersion")
     api("io.justdevit.kotlin:boost-commons")
     api("io.justdevit.kotlin:boost-eventbus")
     api("io.github.kotlin-telegram-bot.kotlin-telegram-bot:telegram:$telegramBotVersion")
