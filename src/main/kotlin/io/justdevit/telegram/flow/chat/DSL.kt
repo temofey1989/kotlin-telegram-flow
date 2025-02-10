@@ -103,8 +103,8 @@ suspend fun ChatStepContext.shortMessage(
  * Sends location data to the chat as a message.
  *
  * @param coordinates The geographical coordinates to send, including latitude, longitude, and address.
- * @param saveResponseId Indicates whether the message ID of the sent location should be stored in the flow's data (default is `true`).
- * @return The sent location message as a [Message] object.
+ * @param saveResponseId Indicates whether the message ID of sent location should be stored in the flow's data (default is `true`).
+ * @return Sent location message as a [Message] object.
  */
 fun ChatStepContext.location(coordinates: GeoCoordinates, saveResponseId: Boolean = true): Message {
     ChatStepContext.log.debug { "Sending location to chat [${state.chatId}]: $coordinates" }
@@ -161,7 +161,7 @@ inline fun <reified T : ChatFlowData> ChatStepContext.data(action: T.() -> Unit)
  * @param parseMode The parse mode for formatting the message text, defaults to [MARKDOWN_V2].
  * @param saveResponseId A flag indicating whether to save the response message ID, defaults to `true`.
  * @param block A lambda configuring the options for the chat using a [ChatOptionsBuilder].
- * @return The message object representing the sent message.
+ * @return The message object representing sent message.
  */
 fun ChatStepContext.options(
     question: String,
