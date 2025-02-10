@@ -24,7 +24,6 @@ val mockkVersion: String by project
 val retrofitVersion: String by project
 val telegramBotVersion: String by project
 
-@Suppress("VulnerableLibrariesLocal", "RedundantSuppression")
 dependencies {
     api(platform("io.justdevit.kotlin:boost-bom:$kotlinBoostVersion"))
 
@@ -43,7 +42,9 @@ dependencies {
     api("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
 
     // Other
-    api("com.squareup.retrofit2:retrofit:$retrofitVersion")
+    api("com.squareup.retrofit2:retrofit:$retrofitVersion") {
+        exclude(group = "com.squareup.okhttp3", module = "okhttp")
+    }
     api("org.kodein.emoji:emoji-kt:$emojiVersion")
     api("io.justdevit.kotlin:boost-commons")
     api("io.justdevit.kotlin:boost-eventbus")
