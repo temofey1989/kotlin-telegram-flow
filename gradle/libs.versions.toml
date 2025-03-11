@@ -1,0 +1,81 @@
+# -------------------------------------------------------------------------------------------------------------------------------------------------- #
+
+[versions]
+emoji = '2.2.0'
+jackson = '2.18.2'
+kotest = '5.9.1'
+kotlin = '2.1.10'
+kotlin-boost = '0.3.6'
+kotlin-coroutines = '1.10.1'
+kotlinter = '5.0.1'
+mockk = '1.13.16'
+retrofit = '2.11.0'
+telegram-bot = '6.3.0'
+
+# -------------------------------------------------------------------------------------------------------------------------------------------------- #
+
+[plugins]
+kotlin-jvm = { id = 'org.jetbrains.kotlin.jvm', version.ref = 'kotlin' }
+kotlinter = { id = 'org.jmailen.kotlinter', version.ref = 'kotlinter' }
+
+# -------------------------------------------------------------------------------------------------------------------------------------------------- #
+
+[libraries]
+# BOMs
+boost-bom = { group = 'io.justdevit.kotlin', name = 'boost-bom', version.ref = 'kotlin-boost' }
+
+# Kotlin Coroutines
+kotlin-coroutines-core = { group = 'org.jetbrains.kotlinx', name = 'kotlinx-coroutines-core', version.ref = 'kotlin-coroutines' }
+
+# Logging
+kotlin-coroutines-slf4j = { group = 'org.jetbrains.kotlinx', name = 'kotlinx-coroutines-slf4j', version.ref = 'kotlin-coroutines' }
+boost-logging-slf4j = { group = 'io.justdevit.kotlin', name = 'boost-logging-slf4j' }
+
+# Serialization
+jackson-databind = { group = 'com.fasterxml.jackson.core', name = 'jackson-databind', version.ref = 'jackson' }
+jackson-dataformat-yaml = { group = 'com.fasterxml.jackson.dataformat', name = 'jackson-dataformat-yaml', version.ref = 'jackson' }
+jackson-module-kotlin = { group = 'com.fasterxml.jackson.module', name = 'jackson-module-kotlin', version.ref = 'jackson' }
+
+# Other
+boost-commons = { group = 'io.justdevit.kotlin', name = 'boost-commons' }
+boost-eventbus = { group = 'io.justdevit.kotlin', name = 'boost-eventbus' }
+emoji = { group = 'org.kodein.emoji', name = 'emoji-kt', version.ref = 'emoji' }
+retrofit = { group = 'com.squareup.retrofit2', name = 'retrofit', version.ref = 'retrofit' }
+telegram = { group = 'io.github.kotlin-telegram-bot.kotlin-telegram-bot', name = 'telegram', version.ref = 'telegram-bot' }
+
+# Testing
+kotest-runner-junit5 = { group = 'io.kotest', name = 'kotest-runner-junit5', version.ref = 'kotest' }
+kotest-assertions-core = { group = 'io.kotest', name = 'kotest-assertions-core', version.ref = 'kotest' }
+kotest-property = { group = 'io.kotest', name = 'kotest-property', version.ref = 'kotest' }
+mockk = { group = 'io.mockk', name = 'mockk', version.ref = 'mockk' }
+
+# -------------------------------------------------------------------------------------------------------------------------------------------------- #
+
+[bundles]
+kotlin-coroutines = [
+    'kotlin-coroutines-core',
+]
+logging = [
+    'kotlin-coroutines-slf4j',
+    'boost-logging-slf4j',
+]
+serialization = [
+    'jackson-databind',
+    'jackson-dataformat-yaml',
+    'jackson-module-kotlin',
+]
+other = [
+    'boost-commons',
+    'boost-eventbus',
+    'emoji',
+    'retrofit',
+    'telegram',
+]
+testing = [
+    'kotest-assertions-core',
+    'kotest-property',
+    'kotest-runner-junit5',
+    'mockk',
+]
+
+# -------------------------------------------------------------------------------------------------------------------------------------------------- #
