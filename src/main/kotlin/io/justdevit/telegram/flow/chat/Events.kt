@@ -49,9 +49,12 @@ data class ChatStepNotFound(
  * Represents a specific type of chat-related event occurring within a chat flow.
  *
  * @property context The context of the current chat step within the flow.
+ * @property flow The Chat Flow of the current chat.
  */
 sealed class ChatFlowEvent : ChatEvent() {
     abstract val context: ChatStepContext
+    val flow: ChatFlow
+        get() = context.flow
 }
 
 /**
@@ -86,9 +89,12 @@ data class ChatFlowTerminated(override val context: ChatStepContext, override va
  * Each event contains contextual information related to the step being executed.
  *
  * @property context The context of the current chat step within the flow.
+ * @property step The Chat Step of the current chat.
  */
 sealed class ChatStepEvent : ChatEvent() {
     abstract val context: ChatStepContext
+    val step: ChatStep
+        get() = context.step
 }
 
 /**

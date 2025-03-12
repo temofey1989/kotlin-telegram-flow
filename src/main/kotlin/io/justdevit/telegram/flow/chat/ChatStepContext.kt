@@ -6,6 +6,7 @@ import com.github.kotlintelegrambot.entities.Update
 import com.github.kotlintelegrambot.entities.payments.PreCheckoutQuery
 import com.github.kotlintelegrambot.entities.payments.SuccessfulPayment
 import io.justdevit.kotlin.boost.logging.Logging
+import io.justdevit.telegram.flow.extension.value
 
 /**
  * Represents the context of a chat step during a chat flow execution.

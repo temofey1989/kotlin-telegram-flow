@@ -47,7 +47,7 @@ import java.util.concurrent.locks.ReentrantLock
  * @property eventBus The event bus used to publish and consume bot-related events.
  * @property errorHandler A handler to process bot errors during execution.
  * @property chatStateExtractor Extracts the chat state during bot execution to maintain stateful interactions.
- * @constructor Initializes a TelegramFlowRunner instance with the specified properties.
+ * @constructor Initializes a [TelegramFlowRunner] instance with the specified properties.
  */
 class TelegramFlowRunner(
     val name: String = "telegram-flow-runner-${randomString()}",
