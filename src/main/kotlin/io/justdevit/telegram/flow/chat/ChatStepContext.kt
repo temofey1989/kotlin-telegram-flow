@@ -67,8 +67,12 @@ data class CommandChatStepContext(
         bot = context.bot,
         update = context.update,
         state = context.state.copy(
-            flowName = step.flow.id,
-            stepName = step.name,
+            flowInfo = context.state.flowInfo?.copy(
+                flowName = step.flow.id,
+            ),
+            stepInfo = context.state.stepInfo?.copy(
+                stepName = step.name,
+            ),
         ),
         step = step,
         command = context.command,
@@ -102,8 +106,12 @@ data class ContinuationChatStepContext(
         bot = context.bot,
         update = context.update,
         state = context.state.copy(
-            flowName = nextStep.flow.id,
-            stepName = nextStep.name,
+            flowInfo = context.state.flowInfo?.copy(
+                flowName = nextStep.flow.id,
+            ),
+            stepInfo = context.state.stepInfo?.copy(
+                stepName = nextStep.name,
+            ),
         ),
         step = nextStep,
     )
@@ -144,8 +152,12 @@ data class CallbackChatStepContext(
         bot = context.bot,
         update = context.update,
         state = context.state.copy(
-            flowName = step.flow.id,
-            stepName = step.name,
+            flowInfo = context.state.flowInfo?.copy(
+                flowName = step.flow.id,
+            ),
+            stepInfo = context.state.stepInfo?.copy(
+                stepName = step.name,
+            ),
         ),
         step = step,
         callbackQuery = context.callbackQuery,
@@ -181,8 +193,12 @@ data class PreCheckoutChatStepContext(
         bot = context.bot,
         update = context.update,
         state = context.state.copy(
-            flowName = step.flow.id,
-            stepName = step.name,
+            flowInfo = context.state.flowInfo?.copy(
+                flowName = step.flow.id,
+            ),
+            stepInfo = context.state.stepInfo?.copy(
+                stepName = step.name,
+            ),
         ),
         step = step,
         preCheckoutQuery = context.preCheckoutQuery,
@@ -217,8 +233,12 @@ data class SuccessfulPaymentChatStepContext(
         bot = context.bot,
         update = context.update,
         state = context.state.copy(
-            flowName = step.flow.id,
-            stepName = step.name,
+            flowInfo = context.state.flowInfo?.copy(
+                flowName = step.flow.id,
+            ),
+            stepInfo = context.state.stepInfo?.copy(
+                stepName = step.name,
+            ),
         ),
         step = step,
         successfulPayment = context.successfulPayment,
@@ -253,8 +273,12 @@ data class TextChatStepContext(
         bot = context.bot,
         update = context.update,
         state = context.state.copy(
-            flowName = step.flow.id,
-            stepName = step.name,
+            flowInfo = context.state.flowInfo?.copy(
+                flowName = step.flow.id,
+            ),
+            stepInfo = context.state.stepInfo?.copy(
+                stepName = step.name,
+            ),
         ),
         step = step,
         text = context.text,

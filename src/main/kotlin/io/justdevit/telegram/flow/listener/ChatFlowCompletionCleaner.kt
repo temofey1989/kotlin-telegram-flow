@@ -21,8 +21,16 @@ class ChatFlowCompletionCleaner : EventListener<ChatFlowCompleted> {
 
     override suspend fun onEvent(event: ChatFlowCompleted) {
         with(event.context) {
-            log.debug { "Removing flow messages for chat [${state.chatId}]: [${state.flowData.stepMessageIds.values.joinToString()}]" }
-            state.flowData.clearMessages()
+            log.debug {
+                val stepMessageIds = state.flowInfo
+                    ?.flowData
+                    ?.stepMessageIds
+                    ?.values ?: emptyList()
+                "Removing flow messages for chat [${state.chatId}]: [${stepMessageIds.joinToString()}]"
+            }
+            state.flowInfo
+                ?.flowData
+                ?.clearMessages()
         }
     }
 }

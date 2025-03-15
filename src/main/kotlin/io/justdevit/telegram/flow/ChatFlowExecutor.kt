@@ -10,8 +10,10 @@ import io.justdevit.telegram.flow.chat.ChatExecutionCompleted
 import io.justdevit.telegram.flow.chat.ChatExecutionStarted
 import io.justdevit.telegram.flow.chat.ChatFlow
 import io.justdevit.telegram.flow.chat.ChatFlowCompleted
+import io.justdevit.telegram.flow.chat.ChatFlowInfo
 import io.justdevit.telegram.flow.chat.ChatFlowNotFound
 import io.justdevit.telegram.flow.chat.ChatFlowStarted
+import io.justdevit.telegram.flow.chat.ChatFlowState
 import io.justdevit.telegram.flow.chat.ChatFlowTerminated
 import io.justdevit.telegram.flow.chat.ChatStep
 import io.justdevit.telegram.flow.chat.ChatStepCompleted
@@ -19,8 +21,10 @@ import io.justdevit.telegram.flow.chat.ChatStepContext
 import io.justdevit.telegram.flow.chat.ChatStepExecutionResult
 import io.justdevit.telegram.flow.chat.ChatStepExecutionSnapshot
 import io.justdevit.telegram.flow.chat.ChatStepFailed
+import io.justdevit.telegram.flow.chat.ChatStepInfo
 import io.justdevit.telegram.flow.chat.ChatStepNotFound
 import io.justdevit.telegram.flow.chat.ChatStepStarted
+import io.justdevit.telegram.flow.chat.ChatStepState
 import io.justdevit.telegram.flow.chat.ChatStepSuspended
 import io.justdevit.telegram.flow.chat.ChatStepTerminated
 import io.justdevit.telegram.flow.chat.CommandChatContext
@@ -34,6 +38,7 @@ import io.justdevit.telegram.flow.chat.GoPrevious
 import io.justdevit.telegram.flow.chat.Goto
 import io.justdevit.telegram.flow.chat.PreCheckoutChatContext
 import io.justdevit.telegram.flow.chat.PreCheckoutChatStepContext
+import io.justdevit.telegram.flow.chat.SimpleChatFlowData
 import io.justdevit.telegram.flow.chat.StartFlow
 import io.justdevit.telegram.flow.chat.StepJumpChatStepExecutionResult
 import io.justdevit.telegram.flow.chat.StopFlow
@@ -76,35 +81,36 @@ import io.justdevit.telegram.flow.listener.ChatStepTerminatedListener
  * Constructor Parameters:
  * @param flowsMap A map of chat flow names to their corresponding [ChatFlow] instances.
  * @param eventBus The [EventBus] used for publishing and listening to chat-related events.
- * @param executionListener A listener for tracking execution states across chat flows and steps.
+ * @param chatStateStore An instance of the [ChatStateStore] to provide storing of the actual state.
  */
 class ChatFlowExecutor(
     private val flowsMap: Map<String, ChatFlow> = emptyMap(),
     private val eventBus: EventBus,
-    executionListener: ChatFlowExecutionListener = ChatFlowExecutionListener.EMPTY,
+    chatStateStore: ChatStateStore,
 ) {
 
     companion object : Logging()
 
-    constructor(flows: List<ChatFlow>, eventBus: EventBus, executionListener: ChatFlowExecutionListener) : this(flows.associateBy { it.id }, eventBus, executionListener)
+    constructor(flows: List<ChatFlow>, eventBus: EventBus, chatStateStore: ChatStateStore) :
+        this(flows.associateBy { it.id }, eventBus, chatStateStore)
 
     init {
         eventBus.register(ChatFlowCompletionCleaner())
         eventBus.register(ChatFlowTerminationCleaner())
         eventBus.register(ChatMessageIdRegistrar())
 
-        eventBus.register(ChatFlowNotFoundListener(executionListener))
-        eventBus.register(ChatStepNotFoundListener(executionListener))
-        eventBus.register(ChatFlowStartedListener(executionListener))
-        eventBus.register(ChatFlowCompletedListener(executionListener))
-        eventBus.register(ChatFlowTerminatedListener(executionListener))
-        eventBus.register(ChatStepStartedListener(executionListener))
-        eventBus.register(ChatStepCompletedListener(executionListener))
-        eventBus.register(ChatStepSuspendedListener(executionListener))
-        eventBus.register(ChatStepTerminatedListener(executionListener))
-        eventBus.register(ChatStepFailedListener(executionListener))
-        eventBus.register(ChatExecutionStartedListener(executionListener))
-        eventBus.register(ChatExecutionCompletedListener(executionListener))
+        eventBus.register(ChatFlowNotFoundListener(chatStateStore))
+        eventBus.register(ChatStepNotFoundListener(chatStateStore))
+        eventBus.register(ChatFlowStartedListener(chatStateStore))
+        eventBus.register(ChatFlowCompletedListener(chatStateStore))
+        eventBus.register(ChatFlowTerminatedListener(chatStateStore))
+        eventBus.register(ChatStepStartedListener(chatStateStore))
+        eventBus.register(ChatStepCompletedListener(chatStateStore))
+        eventBus.register(ChatStepSuspendedListener(chatStateStore))
+        eventBus.register(ChatStepTerminatedListener(chatStateStore))
+        eventBus.register(ChatStepFailedListener(chatStateStore))
+        eventBus.register(ChatExecutionStartedListener(chatStateStore))
+        eventBus.register(ChatExecutionCompletedListener(chatStateStore))
     }
 
     /**
@@ -134,8 +140,8 @@ class ChatFlowExecutor(
 
     private suspend fun executeForStep(context: ChatContext) {
         with(context) {
-            val flowName = state.flowName ?: return
-            val stepName = state.stepName ?: return
+            val flowName = state.flowInfo?.flowName ?: return
+            val stepName = state.stepInfo?.stepName ?: return
             val flow = flowsMap[flowName]
             if (flow == null) {
                 publishChatFlowNotFound(flowName, this)
@@ -237,24 +243,24 @@ class ChatFlowExecutor(
 
     suspend fun ChatStep.invoke(context: ChatStepContext): ChatStepExecutionResult =
         withCoSpanId(forceNew = true) {
-            if (isFirst) {
-                log.debug { "Flow [${flow.id}] has started." }
-                eventBus.coPublish(ChatFlowStarted(context = context))
-            }
             try {
+                if (isFirst) {
+                    log.debug { "Flow [${flow.id}] has started." }
+                    context.toFlowStarted()
+                }
                 if (suspendable && context !is SuspendableChatStepContext) {
                     log.debug { "Step [$fullName] has suspend for chat [${context.state.chatId}]." }
-                    eventBus.coPublish(ChatStepSuspended(context = context))
+                    context.toStepSuspended()
                     return@withCoSpanId SuspendedChatStepExecutionResult()
                 }
                 log.debug { "Step [$fullName] invoke has started for chat [${context.state.chatId}]..." }
-                eventBus.coPublish(ChatStepStarted(context = context))
+                context.toStepStarted()
                 action(context)
+                context.toStepCompleted()
                 log.debug { "Step [$fullName] invoke has completed for chat [${context.state.chatId}]." }
-                eventBus.coPublish(ChatStepCompleted(context = context))
                 if (isLast) {
                     log.debug { "Flow [${flow.id}] has finished." }
-                    eventBus.coPublish(ChatFlowCompleted(context = context))
+                    context.toFlowCompleted()
                 }
                 CompletedChatStepExecutionResult()
             } catch (throwable: Throwable) {
@@ -267,7 +273,7 @@ class ChatFlowExecutor(
             is Goto -> {
                 val stepName = throwable.stepName
                 log.debug { "Moving to [$stepName] step from [$name]." }
-                eventBus.coPublish(ChatStepTerminated(context = context))
+                context.toStepTerminated()
                 StepJumpChatStepExecutionResult(
                     jumpStep = flow.stepMap[stepName]
                         ?: throw IllegalArgumentException("Step [$stepName] does not exist!"),
@@ -276,40 +282,40 @@ class ChatFlowExecutor(
 
             is GoNext -> {
                 log.debug { "Moving to next step from [$name]." }
-                val nextStep = terminateAndFind(next) { it.next } ?: throw IllegalArgumentException("No next step found for step [$name].")
-                eventBus.coPublish(ChatStepTerminated(context = context))
+                val nextStep = terminateAndFind(next) { it.next }
+                    ?: throw IllegalArgumentException("No next step found for step [$name].")
+                context.toStepTerminated()
                 StepJumpChatStepExecutionResult(jumpStep = nextStep)
             }
 
             is GoPrevious -> {
                 log.debug { "Moving to previous step from [$name]." }
-                val previousStep = terminateAndFind(previous) { it.previous } ?: throw IllegalArgumentException("No previous step found for step [$name].")
-                eventBus.coPublish(ChatStepTerminated(context = context))
+                val previousStep = terminateAndFind(previous) { it.previous }
+                    ?: throw IllegalArgumentException("No previous step found for step [$name].")
+                context.toStepTerminated()
                 StepJumpChatStepExecutionResult(jumpStep = previousStep)
             }
 
             is StartFlow -> {
                 log.debug { "Starting new flow [${throwable.flowName}] from [$fullName] step." }
-                eventBus.coPublish(ChatStepTerminated(context = context))
-                eventBus.coPublish(
-                    if (isLast)
-                        ChatFlowCompleted(context = context)
-                    else
-                        ChatFlowTerminated(context = context),
-                )
+                context.toStepTerminated()
+                if (isLast)
+                    context.toFlowCompleted()
+                else
+                    context.toFlowTerminated()
                 FlowJumpChatStepExecutionResult(jumpFlowName = throwable.flowName)
             }
 
             is StopFlow -> {
                 log.debug { "Terminating flow [${flow.id}] from [$fullName] step." }
-                eventBus.coPublish(ChatStepTerminated(context = context))
-                eventBus.coPublish(ChatFlowTerminated(context = context))
+                context.toStepTerminated()
+                context.toFlowTerminated()
                 StopFlowChatStepExecutionResult()
             }
 
             else -> {
                 log.debug { "Failed step [$name] step on flow [${flow.id}]." }
-                eventBus.coPublish(ChatStepFailed(context = context, throwable = throwable))
+                context.toStepFailed(throwable)
                 FailedChatStepExecutionResult(throwable = throwable)
             }
         }
@@ -320,5 +326,84 @@ class ChatFlowExecutor(
             nextStep = extractor(nextStep)
         }
         return nextStep
+    }
+
+    context(ChatStep)
+    private suspend fun ChatStepContext.toFlowStarted() {
+        with(state) {
+            flowInfo = ChatFlowInfo(
+                flowName = flow.id,
+                flowState = ChatFlowState.ACTIVE,
+                flowData = SimpleChatFlowData(),
+            )
+            stepInfo = null
+            eventBus.coPublish(ChatFlowStarted(context = this@toFlowStarted))
+        }
+    }
+
+    context(ChatStep)
+    private suspend fun ChatStepContext.toStepStarted() {
+        state.stepInfo = ChatStepInfo(
+            stepName = name,
+            stepState = ChatStepState.STARTED,
+        )
+        eventBus.coPublish(ChatStepStarted(context = this@toStepStarted))
+    }
+
+    context(ChatStep)
+    private suspend fun ChatStepContext.toStepSuspended() {
+        state.stepInfo = ChatStepInfo(
+            stepName = name,
+            stepState = ChatStepState.SUSPENDED,
+        )
+        eventBus.coPublish(ChatStepSuspended(context = this@toStepSuspended))
+    }
+
+    context(ChatStep)
+    private suspend fun ChatStepContext.toStepCompleted() {
+        state.stepInfo = ChatStepInfo(
+            stepName = name,
+            stepState = ChatStepState.COMPLETED,
+        )
+        eventBus.coPublish(ChatStepCompleted(context = this@toStepCompleted))
+    }
+
+    context(ChatStep)
+    private suspend fun ChatStepContext.toStepTerminated() {
+        state.stepInfo = ChatStepInfo(
+            stepName = name,
+            stepState = ChatStepState.TERMINATED,
+            errorMessage = null,
+        )
+        eventBus.coPublish(ChatStepTerminated(context = this@toStepTerminated))
+    }
+
+    context(ChatStep)
+    private suspend fun ChatStepContext.toStepFailed(error: Throwable) {
+        state.stepInfo = ChatStepInfo(
+            stepName = name,
+            stepState = ChatStepState.FAILED,
+            errorMessage = error.message,
+        )
+        eventBus.coPublish(ChatStepFailed(context = this@toStepFailed, throwable = error))
+    }
+
+    context(ChatStep)
+    private suspend fun ChatStepContext.toFlowCompleted() {
+        with(state) {
+            flowInfo = flowInfo?.copy(
+                flowState = ChatFlowState.COMPLETED,
+            )
+            stepInfo = null
+        }
+        eventBus.coPublish(ChatFlowCompleted(context = this@toFlowCompleted))
+    }
+
+    context(ChatStep)
+    private suspend fun ChatStepContext.toFlowTerminated() {
+        state.flowInfo = state.flowInfo?.copy(
+            flowState = ChatFlowState.TERMINATED,
+        )
+        eventBus.coPublish(ChatFlowTerminated(context = this@toFlowTerminated))
     }
 }

@@ -25,8 +25,10 @@ class ChatMessageIdRegistrar : EventListener<ChatExecutionStarted> {
     override suspend fun onEvent(event: ChatExecutionStarted) {
         with(event.context) {
             update.message?.messageId.ifExists {
-                state.flowData += UserMessageId(it)
-                log.debug { "User message [$it] has been registered to flow data." }
+                state.flowInfo?.apply {
+                    flowData += UserMessageId(it)
+                    log.debug { "User message [$it] has been registered to flow data." }
+                }
             }
         }
     }

@@ -12,4 +12,4 @@ import io.justdevit.kotlin.boost.eventbus.Event
  * @property update The Telegram Bot API update that caused the error.
  * @property throwable The exception or error that occurred during the execution of the update.
  */
-data class TelegramBotExecutionFailed(val update: Update, val throwable: Throwable) : Event()
+data class TelegramBotExecutionFailure(val update: Update, val throwable: Throwable) : Event()

@@ -123,7 +123,7 @@ fun ChatStepContext.location(coordinates: GeoCoordinates, saveResponseId: Boolea
                         ?: IllegalStateException("No exception for location message.")
                 )
             if (saveResponseId) {
-                state.flowData += (step.name to ServerMessageId(message.messageId))
+                state.flowInfo?.flowData += (step.name to ServerMessageId(message.messageId))
             }
             message
         }
@@ -139,7 +139,7 @@ fun ChatStepContext.location(coordinates: GeoCoordinates, saveResponseId: Boolea
  * @return The chat flow data associated with the current chat flow, casted to type [T].
  * @throws ClassCastException if the flow data cannot be cast to type [T].
  */
-inline fun <reified T : ChatFlowData> ChatStepContext.data(): T = state.flowData as T
+inline fun <reified T : ChatFlowData> ChatStepContext.data(): T = (state.flowInfo?.flowData ?: throw IllegalStateException("No flow data exist in current chat state.")) as T
 
 /**
  * Executes an action on the chat flow data of the current step.
@@ -151,7 +151,7 @@ inline fun <reified T : ChatFlowData> ChatStepContext.data(): T = state.flowData
  * @param action A lambda function that operates on the chat flow data of type [T].
  */
 inline fun <reified T : ChatFlowData> ChatStepContext.data(action: T.() -> Unit) {
-    action(state.flowData as T)
+    action(data())
 }
 
 /**
@@ -374,11 +374,12 @@ context(ChatStepContext)
 fun TelegramBotResult<Message>.storeSuccessful(saveResponseId: Boolean): Message {
     onSuccess {
         if (saveResponseId) {
-            state.flowData += (step.name to ServerMessageId(it.messageId))
+            state.flowInfo?.flowData += (step.name to ServerMessageId(it.messageId))
             ChatStepContext.log.debug {
                 val messageIds = state
-                    .flowData
-                    .stepMessageIds[step.name]
+                    .flowInfo
+                    ?.flowData
+                    ?.stepMessageIds[step.name]
                     ?.map { id -> id.toString() } ?: emptyList()
                 "New response message [${it.messageId}] has been registered for step [${step.name}]. Registered massages: $messageIds"
             }
@@ -399,8 +400,9 @@ fun TelegramBotResult<Message>.storeSuccessful(saveResponseId: Boolean): Message
 inline fun <reified T : MessageId> ChatStepContext.clearStepMessages(stepName: String = step.name) {
     with(
         state
-            .flowData
-            .stepMessageIds[stepName] ?: return,
+            .flowInfo
+            ?.flowData
+            ?.stepMessageIds[stepName] ?: return,
     ) {
         filterIsInstance<T>().forEach {
             bot.deleteMessage(chatId = state.botChatId, messageId = it.value)
@@ -435,7 +437,9 @@ inline fun <reified T : MessageId> ChatStepContext.clearPreviousStepMessages() =
  * associated message identifiers are removed from the flow data.
  */
 fun ChatStepContext.clearFlowMessages() {
-    state.flowData.clearMessages()
+    state.flowInfo
+        ?.flowData
+        ?.clearMessages()
 }
 
 /**

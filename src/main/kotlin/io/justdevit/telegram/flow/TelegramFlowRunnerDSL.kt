@@ -19,7 +19,7 @@ import io.justdevit.telegram.flow.listener.TelegramFlowRunnerErrorLogger
  * @param configure A lambda function to apply additional custom configurations to the [TelegramFlowRunnerBuilder].
  * @return A configured instance of [TelegramFlowRunner].
  */
-fun telegramFlowRunner(
+fun runner(
     token: String,
     name: String = "telegram-flow-runner-${randomString()}",
     logLevel: LogLevel = LogLevel.Error,
@@ -50,17 +50,8 @@ class TelegramFlowRunnerBuilder(
 
     private val listeners = mutableListOf<EventListener<*>>()
     private val flows = mutableListOf<ChatFlow>()
-    var chatStateExtractor: ChatStateExtractor = StubbingChatStateExtractor
+    var chatStateStore: ChatStateStore = InMemoryChatStateStore()
     var errorHandler: TelegramBotErrorHandler = TelegramFlowRunnerErrorLogger()
-    var executionListener: ChatFlowExecutionListener = ChatFlowExecutionListener.EMPTY
-    var stateProcessor: ChatStateProcessor? = null
-        set(value) {
-            field = value
-            if (value != null) {
-                chatStateExtractor = value
-                executionListener = value
-            }
-        }
 
     /**
      * Adds one or more event listeners to the [TelegramFlowRunnerBuilder].
@@ -150,15 +141,15 @@ class TelegramFlowRunnerBuilder(
     /**
      * Registers an action to handle errors occurring during the execution of Telegram Flow operations.
      *
-     * @param action A lambda function invoked with a [TelegramBotExecutionFailed] instance,
+     * @param action A lambda function invoked with a [TelegramBotExecutionFailure] instance,
      * representing the error details such as the failed update and the associated throwable.
      * @return The current instance of [TelegramFlowRunnerBuilder] for further configuration or chaining.
      */
     @Suppress("UNCHECKED_CAST")
-    inline fun onError(crossinline action: (TelegramBotExecutionFailed) -> Unit): TelegramFlowRunnerBuilder {
+    inline fun onError(crossinline action: (TelegramBotExecutionFailure) -> Unit): TelegramFlowRunnerBuilder {
         addListener(
             object : TelegramBotErrorHandler() {
-                override suspend fun onEvent(event: TelegramBotExecutionFailed) = action(event)
+                override suspend fun onEvent(event: TelegramBotExecutionFailure) = action(event)
             } as EventListener<ChatEvent>,
         )
         return this
@@ -180,10 +171,9 @@ class TelegramFlowRunnerBuilder(
             token = token,
             name = name,
             logLevel = logLevel,
-            chatStateExtractor = chatStateExtractor,
+            chatStateStore = chatStateStore,
             errorHandler = errorHandler,
             flows = flows.toList(),
-            executionListener = executionListener,
         )
         runner.register(*listeners.toTypedArray())
         return runner.also {

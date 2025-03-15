@@ -45,8 +45,8 @@ import java.util.concurrent.locks.ReentrantLock
  * @property flows A list of Chat Flows defining the bot's conversational logic.
  * @property logLevel Defines the logging verbosity for bot operations.
  * @property eventBus The event bus used to publish and consume bot-related events.
+ * @property chatStateStore Extracts the chat state during bot execution to maintain stateful interactions.
  * @property errorHandler A handler to process bot errors during execution.
- * @property chatStateExtractor Extracts the chat state during bot execution to maintain stateful interactions.
  * @constructor Initializes a [TelegramFlowRunner] instance with the specified properties.
  */
 class TelegramFlowRunner(
@@ -55,16 +55,15 @@ class TelegramFlowRunner(
     private val flows: List<ChatFlow> = emptyList(),
     private val logLevel: LogLevel = LogLevel.Error,
     private val eventBus: EventBus = DefaultEventBus(),
+    private val chatStateStore: ChatStateStore = InMemoryChatStateStore(),
     private val errorHandler: TelegramBotErrorHandler = TelegramFlowRunnerErrorLogger(),
-    private val chatStateExtractor: ChatStateExtractor = StubbingChatStateExtractor,
-    executionListener: ChatFlowExecutionListener = ChatFlowExecutionListener.EMPTY,
 ) {
 
     lateinit var bot: Bot
     private var ready = false
     private var started = false
     private val lock = ReentrantLock()
-    private val flowExecutor = ChatFlowExecutor(flows, eventBus, executionListener)
+    private val flowExecutor = ChatFlowExecutor(flows, eventBus, chatStateStore)
 
     /**
      * Starts the Telegram Bot polling if it is not already started.
@@ -152,13 +151,15 @@ class TelegramFlowRunner(
         flows.forEach { flow ->
             command(flow.id) {
                 withErrorHandling(update) {
-                    CommandChatContext(
-                        bot = bot,
-                        state = chatStateExtractor.extract(message.chat.id, ChatStateExtractionContext(update, this@TelegramFlowRunner)).enrichMetadata(),
-                        update = update,
-                        command = flow.id,
-                        args = args,
-                    ).execute()
+                    extractChatState(message.chat.id, update)?.also {
+                        CommandChatContext(
+                            bot = bot,
+                            state = it,
+                            update = update,
+                            command = flow.id,
+                            args = args,
+                        ).execute()
+                    }
                 }
             }
         }
@@ -170,12 +171,14 @@ class TelegramFlowRunner(
     private fun Dispatcher.messages() {
         message(Filter.Text) {
             withErrorHandling(update) {
-                TextChatContext(
-                    bot = bot,
-                    state = chatStateExtractor.extract(message.chat.id, ChatStateExtractionContext(update, this@TelegramFlowRunner)).enrichMetadata(),
-                    update = update,
-                    text = message.text ?: "",
-                ).execute()
+                extractChatState(message.chat.id, update)?.also {
+                    TextChatContext(
+                        bot = bot,
+                        state = it,
+                        update = update,
+                        text = message.text ?: "",
+                    ).execute()
+                }
             }
         }
     }
@@ -189,12 +192,14 @@ class TelegramFlowRunner(
                     callbackQuery(it.value.fullName) {
                         withErrorHandling(update) {
                             val message = callbackQuery.message ?: return@withErrorHandling
-                            CallbackChatContext(
-                                bot = bot,
-                                state = chatStateExtractor.extract(message.chat.id, ChatStateExtractionContext(update, this@TelegramFlowRunner)).enrichMetadata(),
-                                update = update,
-                                callbackQuery = callbackQuery,
-                            ).execute()
+                            extractChatState(message.chat.id, update)?.also {
+                                CallbackChatContext(
+                                    bot = bot,
+                                    state = it,
+                                    update = update,
+                                    callbackQuery = callbackQuery,
+                                ).execute()
+                            }
                         }
                     }
                 }
@@ -205,12 +210,14 @@ class TelegramFlowRunner(
         preCheckoutQuery {
             withErrorHandling(update) {
                 val user = update.preCheckoutQuery!!.from
-                PreCheckoutChatContext(
-                    bot = bot,
-                    state = chatStateExtractor.extract(user.id, ChatStateExtractionContext(update, this@TelegramFlowRunner)).enrichMetadata(),
-                    update = update,
-                    preCheckoutQuery = preCheckoutQuery,
-                ).execute()
+                extractChatState(user.id, update)?.also {
+                    PreCheckoutChatContext(
+                        bot = bot,
+                        state = it,
+                        update = update,
+                        preCheckoutQuery = preCheckoutQuery,
+                    ).execute()
+                }
             }
         }
     }
@@ -222,13 +229,15 @@ class TelegramFlowRunner(
             },
         ) {
             withErrorHandling(update) {
-                val successfulPayment = message.successfulPayment ?: return@withErrorHandling
-                SuccessfulPaymentChatContext(
-                    bot = bot,
-                    state = chatStateExtractor.extract(message.chat.id, ChatStateExtractionContext(update, this@TelegramFlowRunner)).enrichMetadata(),
-                    update = update,
-                    successfulPayment = successfulPayment,
-                ).execute()
+                extractChatState(message.chat.id, update)?.also {
+                    val successfulPayment = message.successfulPayment ?: return@withErrorHandling
+                    SuccessfulPaymentChatContext(
+                        bot = bot,
+                        state = it,
+                        update = update,
+                        successfulPayment = successfulPayment,
+                    ).execute()
+                }
             }
         }
     }
@@ -240,10 +249,12 @@ class TelegramFlowRunner(
                     action()
                 }
             } catch (throwable: Throwable) {
-                eventBus.coPublish(TelegramBotExecutionFailed(update, throwable))
+                eventBus.coPublish(TelegramBotExecutionFailure(update, throwable))
             }
         }
     }
+
+    private suspend fun extractChatState(chatId: Long, update: Update) = chatStateStore.extract(chatId, ChatStateExtractionContext(update, this))?.enrichMetadata()
 
     private suspend fun ChatContext.execute() {
         flowExecutor.execute(this)
