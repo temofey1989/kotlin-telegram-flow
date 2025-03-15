@@ -1,7 +1,8 @@
 package io.justdevit.telegram.flow
 
-import io.justdevit.telegram.flow.chat.ChatState
-import io.justdevit.telegram.flow.chat.runnerName
+import io.justdevit.telegram.flow.model.ChatState
+import io.justdevit.telegram.flow.model.ChatStateExtractionContext
+import io.justdevit.telegram.flow.model.runnerName
 import java.util.concurrent.ConcurrentHashMap
 
 /**

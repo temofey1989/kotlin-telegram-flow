@@ -1,56 +1,27 @@
-@file:Suppress("unused", "MemberVisibilityCanBePrivate")
+package io.justdevit.telegram.flow.dsl
 
-package io.justdevit.telegram.flow.chat
-
-import io.justdevit.kotlin.boost.extension.hasWhitespaces
 import io.justdevit.kotlin.boost.logging.Logging
 import io.justdevit.telegram.flow.CALLBACK_SUSPENDED_STEP_MARKER
 import io.justdevit.telegram.flow.PRE_CHECKOUT_SUSPENDED_STEP_MARKER
 import io.justdevit.telegram.flow.SUCCESSFUL_PAYMENT_SUSPENDED_STEP_MARKER
 import io.justdevit.telegram.flow.TEXT_SUSPENDED_STEP_MARKER
+import io.justdevit.telegram.flow.model.CallbackChatStepContext
+import io.justdevit.telegram.flow.model.ChatFlow
+import io.justdevit.telegram.flow.model.ChatMenu
+import io.justdevit.telegram.flow.model.ChatStep
+import io.justdevit.telegram.flow.model.ChatStepContext
+import io.justdevit.telegram.flow.model.PreCheckoutChatStepContext
+import io.justdevit.telegram.flow.model.SuccessfulPaymentChatStepContext
+import io.justdevit.telegram.flow.model.SuspendableChatStepContext
+import io.justdevit.telegram.flow.model.TextChatStepContext
 
 /**
- * Represents a chat flow, defining a sequence of steps and an optional menu for interaction.
- *
- * @property id The ID of the chat flow, which must not be blank and has no whitespaces.
- * @property menu An optional [ChatMenu] associated with this chat flow, providing additional commands or actions.
- * @property steps A list of [ChatStep] objects that form the sequence of steps in the chat flow. Defaults to an empty list.
- * @constructor Initializes the chat flow and validates that the name is not blank.
- */
-data class ChatFlow(
-    val id: String,
-    val menu: ChatMenu? = null,
-    val steps: List<ChatStep> = emptyList(),
-) {
-
-    init {
-        require(id.isNotBlank()) {
-            "Chat Flow ID cannot be blank."
-        }
-        require(!id.hasWhitespaces()) {
-            "Chat Flow ID cannot have whitespaces."
-        }
-    }
-
-    val stepMap: Map<String, ChatStep>
-        get() = steps.associateBy { it.name }
-
-    val firstStep: ChatStep
-        get() = steps.first()
-
-    val lastStep: ChatStep
-        get() = steps.last()
-
-    override fun toString() = "ChatFlow(name='$id', steps=${steps.map { it.name }})"
-}
-
-/**
- * A builder class used to define and construct a [ChatFlow] by specifying its steps and optional menu configuration.
+ * A builder class used to define and construct a [io.justdevit.telegram.flow.model.ChatFlow] by specifying its steps and optional menu configuration.
  *
  * @property id The ID of the chat flow being built. It must not be blank or contain whitespaces.
- * @property menu An optional [ChatMenu] that can be associated with this chat flow to define commands or actions for interaction.
+ * @property menu An optional [io.justdevit.telegram.flow.model.ChatMenu] that can be associated with this chat flow to define commands or actions for interaction.
  *
- * This class allows adding and configuring chat steps within a flow and provides functionality to build the final [ChatFlow].
+ * This class allows adding and configuring chat steps within a flow and provides functionality to build the final [io.justdevit.telegram.flow.model.ChatFlow].
  * Each chat step represents a distinct interaction point in the flow and can optionally be suspendable for awaiting specific events.
  */
 open class ChatFlowBuilder(var id: String, var menu: ChatMenu? = null) {
@@ -63,9 +34,9 @@ open class ChatFlowBuilder(var id: String, var menu: ChatMenu? = null) {
         get() = steps.lastOrNull()
 
     /**
-     * Builds a [ChatFlow] instance based on the current configuration of the builder.
+     * Builds a [io.justdevit.telegram.flow.model.ChatFlow] instance based on the current configuration of the builder.
      *
-     * @return A new [ChatFlow] instance initialized with the builder's state.
+     * @return A new [io.justdevit.telegram.flow.model.ChatFlow] instance initialized with the builder's state.
      */
     fun build() =
         ChatFlow(id = id, menu = menu, steps = steps.toList()).also {
@@ -79,7 +50,7 @@ open class ChatFlowBuilder(var id: String, var menu: ChatMenu? = null) {
     /**
      * Declares a step within a chat flow, associating the given execution logic with the step name.
      *
-     * @param execution A suspendable function that defines the behavior of the step, executed in the context of [ChatStepContext].
+     * @param execution A suspendable function that defines the behavior of the step, executed in the context of [io.justdevit.telegram.flow.model.ChatStepContext].
      */
     operator fun String.invoke(execution: suspend ChatStepContext.() -> Unit) = step(this, execution)
 
@@ -160,7 +131,12 @@ open class ChatFlowBuilder(var id: String, var menu: ChatMenu? = null) {
      * @param action A suspendable action that is executed in the [PreCheckoutChatStepContext] when the pre-checkout input is received.
      * @return Newly created suspended step.
      */
-    fun ChatStep.awaitPreCheckout(fallback: Boolean = true, action: suspend PreCheckoutChatStepContext.() -> Unit) = await(PRE_CHECKOUT_SUSPENDED_STEP_MARKER, fallback, action)
+    fun ChatStep.awaitPreCheckout(fallback: Boolean = true, action: suspend PreCheckoutChatStepContext.() -> Unit) =
+        await(
+            PRE_CHECKOUT_SUSPENDED_STEP_MARKER,
+            fallback,
+            action,
+        )
 
     /**
      * Awaits a successful-payment at the current chat step and executes the specified suspendable action

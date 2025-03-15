@@ -1,4 +1,4 @@
-package io.justdevit.telegram.flow
+package io.justdevit.telegram.flow.model
 
 import com.github.kotlintelegrambot.entities.Update
 import io.justdevit.kotlin.boost.eventbus.Event

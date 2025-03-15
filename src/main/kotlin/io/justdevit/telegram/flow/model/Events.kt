@@ -1,4 +1,4 @@
-package io.justdevit.telegram.flow.chat
+package io.justdevit.telegram.flow.model
 
 import io.justdevit.kotlin.boost.eventbus.Event
 import java.time.Instant

@@ -1,4 +1,4 @@
-package io.justdevit.telegram.flow.chat
+package io.justdevit.telegram.flow.dsl
 
 /**
  * A custom exception class to signal a control flow that specifies

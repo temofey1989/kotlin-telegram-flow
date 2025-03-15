@@ -1,4 +1,4 @@
-package io.justdevit.telegram.flow.chat
+package io.justdevit.telegram.flow.model
 
 /**
  * Represents a unique identifier for a message.

@@ -22,16 +22,19 @@ import io.justdevit.kotlin.boost.eventbus.EventListener
 import io.justdevit.kotlin.boost.extension.randomString
 import io.justdevit.kotlin.boost.extension.runIf
 import io.justdevit.kotlin.boost.logging.withCoTracing
-import io.justdevit.telegram.flow.chat.CallbackChatContext
-import io.justdevit.telegram.flow.chat.ChatContext
-import io.justdevit.telegram.flow.chat.ChatFlow
-import io.justdevit.telegram.flow.chat.ChatState
-import io.justdevit.telegram.flow.chat.CommandChatContext
-import io.justdevit.telegram.flow.chat.PreCheckoutChatContext
-import io.justdevit.telegram.flow.chat.SuccessfulPaymentChatContext
-import io.justdevit.telegram.flow.chat.TextChatContext
 import io.justdevit.telegram.flow.listener.TelegramBotErrorHandler
 import io.justdevit.telegram.flow.listener.TelegramFlowRunnerErrorLogger
+import io.justdevit.telegram.flow.model.CallbackChatContext
+import io.justdevit.telegram.flow.model.ChatContext
+import io.justdevit.telegram.flow.model.ChatFlow
+import io.justdevit.telegram.flow.model.ChatState
+import io.justdevit.telegram.flow.model.ChatStateExtractionContext
+import io.justdevit.telegram.flow.model.CommandChatContext
+import io.justdevit.telegram.flow.model.PreCheckoutChatContext
+import io.justdevit.telegram.flow.model.SuccessfulPaymentChatContext
+import io.justdevit.telegram.flow.model.TelegramBotExecutionFailure
+import io.justdevit.telegram.flow.model.TelegramErrorReceived
+import io.justdevit.telegram.flow.model.TextChatContext
 import kotlinx.coroutines.supervisorScope
 import java.util.concurrent.locks.ReentrantLock
 

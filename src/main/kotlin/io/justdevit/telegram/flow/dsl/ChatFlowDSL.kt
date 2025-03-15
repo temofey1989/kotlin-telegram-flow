@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package io.justdevit.telegram.flow.chat
+package io.justdevit.telegram.flow.dsl
 
 import com.github.kotlintelegrambot.dispatcher.Dispatcher
 import com.github.kotlintelegrambot.entities.InlineKeyboardMarkup
@@ -16,18 +16,27 @@ import io.justdevit.telegram.flow.CALLBACK_DATA_DELIMITER
 import io.justdevit.telegram.flow.CALLBACK_SUSPENDED_STEP_MARKER
 import io.justdevit.telegram.flow.SHORT_MESSAGE_LIFETIME
 import io.justdevit.telegram.flow.SUSPENDED_STEP_MARKER
-import io.justdevit.telegram.flow.TelegramException
 import io.justdevit.telegram.flow.extension.sendPdf
 import io.justdevit.telegram.flow.i18n.T
+import io.justdevit.telegram.flow.model.ChatFlow
+import io.justdevit.telegram.flow.model.ChatFlowData
+import io.justdevit.telegram.flow.model.ChatMenu
+import io.justdevit.telegram.flow.model.ChatStepContext
+import io.justdevit.telegram.flow.model.GeoCoordinates
+import io.justdevit.telegram.flow.model.MessageId
+import io.justdevit.telegram.flow.model.ServerMessageId
+import io.justdevit.telegram.flow.model.SuspendableChatStepContext
+import io.justdevit.telegram.flow.model.TelegramException
+import io.justdevit.telegram.flow.model.botChatId
 import kotlinx.coroutines.delay
 import java.math.BigDecimal
 import kotlin.time.Duration
 
 /**
- * Creates a [ChatFlow] using the given string as its ID and applying the configuration defined in the specified block.
+ * Creates a [io.justdevit.telegram.flow.model.ChatFlow] using the given string as its ID and applying the configuration defined in the specified block.
  *
  * @param block A lambda with a receiver of type [ChatFlowBuilder] that defines the steps and optional menu configuration of the chat flow.
- * @return A [ChatFlow] instance initialized with the provided ID and the configuration defined in the block.
+ * @return A [io.justdevit.telegram.flow.model.ChatFlow] instance initialized with the provided ID and the configuration defined in the block.
  */
 context(Dispatcher)
 operator fun String.minus(block: ChatFlowBuilder.() -> Unit): ChatFlow = chatFlow(this, null, block)
@@ -133,9 +142,9 @@ fun ChatStepContext.location(coordinates: GeoCoordinates, saveResponseId: Boolea
  * Retrieves the chat flow data of the specified type for the current step context.
  *
  * This method casts the current flow data stored in the chat state to the specified type [T].
- * It is expected that the type [T] is a subtype of [ChatFlowData].
+ * It is expected that the type [T] is a subtype of [io.justdevit.telegram.flow.model.ChatFlowData].
  *
- * @param T The type of data extending [ChatFlowData].
+ * @param T The type of data extending [io.justdevit.telegram.flow.model.ChatFlowData].
  * @return The chat flow data associated with the current chat flow, casted to type [T].
  * @throws ClassCastException if the flow data cannot be cast to type [T].
  */
@@ -394,7 +403,7 @@ fun TelegramBotResult<Message>.storeSuccessful(saveResponseId: Boolean): Message
 /**
  * Deletes messages associated with a specific step and message type from the chat state.
  *
- * @param T The type of messages to clear, which must implement [MessageId].
+ * @param T The type of messages to clear, which must implement [io.justdevit.telegram.flow.model.MessageId].
  * @param stepName The name of the step whose messages should be cleared. Defaults to the name of the current step.
  */
 inline fun <reified T : MessageId> ChatStepContext.clearStepMessages(stepName: String = step.name) {

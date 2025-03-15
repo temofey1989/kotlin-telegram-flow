@@ -1,4 +1,4 @@
-package io.justdevit.telegram.flow.chat
+package io.justdevit.telegram.flow.model
 
 /**
  * Represents the state of a step within a chat flow process.

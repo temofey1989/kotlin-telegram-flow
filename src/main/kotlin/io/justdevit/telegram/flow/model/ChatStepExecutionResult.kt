@@ -1,4 +1,4 @@
-package io.justdevit.telegram.flow.chat
+package io.justdevit.telegram.flow.model
 
 import java.time.Instant
 import java.time.Instant.now

@@ -1,23 +1,26 @@
-package io.justdevit.telegram.flow
+package io.justdevit.telegram.flow.dsl
 
 import com.github.kotlintelegrambot.logging.LogLevel
 import io.justdevit.kotlin.boost.eventbus.EventListener
 import io.justdevit.kotlin.boost.extension.randomString
-import io.justdevit.telegram.flow.chat.ChatEvent
-import io.justdevit.telegram.flow.chat.ChatFlow
-import io.justdevit.telegram.flow.chat.ChatFlowBuilder
+import io.justdevit.telegram.flow.ChatStateStore
+import io.justdevit.telegram.flow.InMemoryChatStateStore
+import io.justdevit.telegram.flow.TelegramFlowRunner
 import io.justdevit.telegram.flow.listener.TelegramBotErrorHandler
 import io.justdevit.telegram.flow.listener.TelegramFlowRunnerErrorLogger
+import io.justdevit.telegram.flow.model.ChatEvent
+import io.justdevit.telegram.flow.model.ChatFlow
+import io.justdevit.telegram.flow.model.TelegramBotExecutionFailure
 
 /**
- * Constructs and runs an instance of [TelegramFlowRunner] based on the provided configuration.
+ * Constructs and runs an instance of [io.justdevit.telegram.flow.TelegramFlowRunner] based on the provided configuration.
  *
  * @param token The Bot token used to authenticate with the Telegram Bot API.
  * @param name The name of the flow runner. Defaults to a randomly generated name prefixed with "telegram-flow-runner".
  * @param logLevel The logging level for the flow runner. Defaults to `LogLevel.Error`.
  * @param autoStartup Indicates whether the runner should automatically start after creation. Defaults to `true`.
  * @param configure A lambda function to apply additional custom configurations to the [TelegramFlowRunnerBuilder].
- * @return A configured instance of [TelegramFlowRunner].
+ * @return A configured instance of [io.justdevit.telegram.flow.TelegramFlowRunner].
  */
 fun runner(
     token: String,
@@ -34,7 +37,7 @@ fun runner(
     .build()
 
 /**
- * This builder class is used to configure and construct an instance of [TelegramFlowRunner].
+ * This builder class is used to configure and construct an instance of [io.justdevit.telegram.flow.TelegramFlowRunner].
  *
  * @param token The bot token used to authenticate with the Telegram Bot API.
  * @param name The name of the flow runner. Defaults to a randomly generated name prefixed with "telegram-flow-runner".
@@ -156,15 +159,15 @@ class TelegramFlowRunnerBuilder(
     }
 
     /**
-     * Builds and returns an instance of [TelegramFlowRunner] based on the configuration provided
+     * Builds and returns an instance of [io.justdevit.telegram.flow.TelegramFlowRunner] based on the configuration provided
      * in the [TelegramFlowRunnerBuilder].
      *
-     * The method initializes a [TelegramFlowRunner] instance using the builder's properties,
+     * The method initializes a [io.justdevit.telegram.flow.TelegramFlowRunner] instance using the builder's properties,
      * such as token, name, log level, listeners, flows, chat state extractor, error handler,
      * and execution listener. It also registers the provided listeners and optionally starts
      * the runner if the auto-startup flag is enabled.
      *
-     * @return A configured and optionally started instance of [TelegramFlowRunner].
+     * @return A configured and optionally started instance of [io.justdevit.telegram.flow.TelegramFlowRunner].
      */
     fun build(): TelegramFlowRunner {
         val runner = TelegramFlowRunner(

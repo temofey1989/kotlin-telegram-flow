@@ -1,4 +1,4 @@
-package io.justdevit.telegram.flow.chat
+package io.justdevit.telegram.flow.model
 
 import com.github.kotlintelegrambot.entities.ChatId
 import io.justdevit.telegram.flow.TELEGRAM_FLOW_RUNNER_NAME_KEY
@@ -24,28 +24,6 @@ data class ChatState(
     var stepInfo: ChatStepInfo? = null,
 
     var lastUpdate: Instant? = null,
-)
-
-/**
- * @property flowName Name of the current flow being executed in the chat.
- * @property flowState State of the current flow being executed in the chat.
- * @property flowData Object implementing [ChatFlowData] to manage the flow step information and associated messages. Defaults to an instance of [SimpleChatFlowData].
- */
-data class ChatFlowInfo(
-    var flowName: String,
-    var flowState: ChatFlowState,
-    var flowData: ChatFlowData = SimpleChatFlowData(),
-)
-
-/**
- * @property stepName Name of the current step in the flow.
- * @property stepState State of the current step in the flow.
- * @property errorMessage Error message. Relevant only for failed step executions.
- */
-data class ChatStepInfo(
-    var stepName: String,
-    var stepState: ChatStepState,
-    var errorMessage: String? = null,
 )
 
 /**

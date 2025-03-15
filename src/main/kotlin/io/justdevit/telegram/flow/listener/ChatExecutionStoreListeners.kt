@@ -2,18 +2,18 @@ package io.justdevit.telegram.flow.listener
 
 import io.justdevit.kotlin.boost.eventbus.EventListener
 import io.justdevit.telegram.flow.ChatStateStore
-import io.justdevit.telegram.flow.chat.ChatExecutionCompleted
-import io.justdevit.telegram.flow.chat.ChatExecutionStarted
-import io.justdevit.telegram.flow.chat.ChatFlowCompleted
-import io.justdevit.telegram.flow.chat.ChatFlowNotFound
-import io.justdevit.telegram.flow.chat.ChatFlowStarted
-import io.justdevit.telegram.flow.chat.ChatFlowTerminated
-import io.justdevit.telegram.flow.chat.ChatStepCompleted
-import io.justdevit.telegram.flow.chat.ChatStepFailed
-import io.justdevit.telegram.flow.chat.ChatStepNotFound
-import io.justdevit.telegram.flow.chat.ChatStepStarted
-import io.justdevit.telegram.flow.chat.ChatStepSuspended
-import io.justdevit.telegram.flow.chat.ChatStepTerminated
+import io.justdevit.telegram.flow.model.ChatExecutionCompleted
+import io.justdevit.telegram.flow.model.ChatExecutionStarted
+import io.justdevit.telegram.flow.model.ChatFlowCompleted
+import io.justdevit.telegram.flow.model.ChatFlowNotFound
+import io.justdevit.telegram.flow.model.ChatFlowStarted
+import io.justdevit.telegram.flow.model.ChatFlowTerminated
+import io.justdevit.telegram.flow.model.ChatStepCompleted
+import io.justdevit.telegram.flow.model.ChatStepFailed
+import io.justdevit.telegram.flow.model.ChatStepNotFound
+import io.justdevit.telegram.flow.model.ChatStepStarted
+import io.justdevit.telegram.flow.model.ChatStepSuspended
+import io.justdevit.telegram.flow.model.ChatStepTerminated
 
 /**
  * Listener for handling [ChatFlowNotFound] events.

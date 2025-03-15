@@ -2,8 +2,8 @@ package io.justdevit.telegram.flow.listener
 
 import io.justdevit.kotlin.boost.eventbus.EventListener
 import io.justdevit.kotlin.boost.logging.Logging
-import io.justdevit.telegram.flow.chat.ChatFlowCompleted
-import io.justdevit.telegram.flow.chat.clearMessages
+import io.justdevit.telegram.flow.dsl.clearMessages
+import io.justdevit.telegram.flow.model.ChatFlowCompleted
 
 /**
  * Handles the termination of a chat flow.

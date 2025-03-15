@@ -1,7 +1,7 @@
 package io.justdevit.telegram.flow.listener
 
 import io.justdevit.kotlin.boost.eventbus.EventListener
-import io.justdevit.telegram.flow.TelegramBotExecutionFailure
+import io.justdevit.telegram.flow.model.TelegramBotExecutionFailure
 
 /**
  * Handles errors that occur during the execution of Telegram Bot updates.

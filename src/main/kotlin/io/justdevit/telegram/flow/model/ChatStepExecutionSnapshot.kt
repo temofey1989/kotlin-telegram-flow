@@ -1,4 +1,4 @@
-package io.justdevit.telegram.flow.chat
+package io.justdevit.telegram.flow.model
 
 /**
  * Captures a snapshot of the execution of a single chat flow step.

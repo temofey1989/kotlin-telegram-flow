@@ -1,4 +1,4 @@
-package io.justdevit.telegram.flow
+package io.justdevit.telegram.flow.model
 
 import com.github.kotlintelegrambot.Bot
 import com.github.kotlintelegrambot.errors.TelegramError

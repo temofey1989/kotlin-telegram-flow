@@ -1,4 +1,4 @@
-package io.justdevit.telegram.flow.chat
+package io.justdevit.telegram.flow.model
 
 import io.justdevit.telegram.flow.CHAT_PATH_DELIMITER
 

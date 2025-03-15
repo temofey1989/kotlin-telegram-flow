@@ -1,7 +1,7 @@
 package io.justdevit.telegram.flow.listener
 
 import io.justdevit.kotlin.boost.logging.Logging
-import io.justdevit.telegram.flow.TelegramBotExecutionFailure
+import io.justdevit.telegram.flow.model.TelegramBotExecutionFailure
 import kotlin.Int.Companion.MAX_VALUE
 
 /**

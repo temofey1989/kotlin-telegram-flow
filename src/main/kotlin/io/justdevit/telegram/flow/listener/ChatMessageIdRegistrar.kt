@@ -3,9 +3,9 @@ package io.justdevit.telegram.flow.listener
 import io.justdevit.kotlin.boost.eventbus.EventListener
 import io.justdevit.kotlin.boost.extension.ifExists
 import io.justdevit.kotlin.boost.logging.Logging
-import io.justdevit.telegram.flow.chat.ChatExecutionStarted
-import io.justdevit.telegram.flow.chat.UserMessageId
-import io.justdevit.telegram.flow.chat.plusAssign
+import io.justdevit.telegram.flow.dsl.plusAssign
+import io.justdevit.telegram.flow.model.ChatExecutionStarted
+import io.justdevit.telegram.flow.model.UserMessageId
 
 /**
  * Registers the ID of a user's message during the chat execution flow.
