@@ -23,13 +23,13 @@ class ChatFlowCompletionCleaner : EventListener<ChatFlowCompleted> {
         with(event.context) {
             log.debug {
                 val stepMessageIds = state.flowInfo
-                    ?.flowData
+                    ?.data
                     ?.stepMessageIds
                     ?.values ?: emptyList()
                 "Removing flow messages for chat [${state.chatId}]: [${stepMessageIds.joinToString()}]"
             }
             state.flowInfo
-                ?.flowData
+                ?.data
                 ?.clearMessages()
         }
     }

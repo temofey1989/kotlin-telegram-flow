@@ -26,7 +26,7 @@ class ChatMessageIdRegistrar : EventListener<ChatExecutionStarted> {
         with(event.context) {
             update.message?.messageId.ifExists {
                 state.flowInfo?.apply {
-                    flowData += UserMessageId(it)
+                    data += UserMessageId(it)
                     log.debug { "User message [$it] has been registered to flow data." }
                 }
             }

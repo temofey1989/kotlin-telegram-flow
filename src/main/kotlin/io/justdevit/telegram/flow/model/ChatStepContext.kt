@@ -68,10 +68,10 @@ data class CommandChatStepContext(
         update = context.update,
         state = context.state.copy(
             flowInfo = context.state.flowInfo?.copy(
-                flowName = step.flow.id,
+                name = step.flow.id,
             ),
             stepInfo = context.state.stepInfo?.copy(
-                stepName = step.name,
+                name = step.name,
             ),
         ),
         step = step,
@@ -107,10 +107,10 @@ data class ContinuationChatStepContext(
         update = context.update,
         state = context.state.copy(
             flowInfo = context.state.flowInfo?.copy(
-                flowName = nextStep.flow.id,
+                name = nextStep.flow.id,
             ),
             stepInfo = context.state.stepInfo?.copy(
-                stepName = nextStep.name,
+                name = nextStep.name,
             ),
         ),
         step = nextStep,
@@ -153,10 +153,10 @@ data class CallbackChatStepContext(
         update = context.update,
         state = context.state.copy(
             flowInfo = context.state.flowInfo?.copy(
-                flowName = step.flow.id,
+                name = step.flow.id,
             ),
             stepInfo = context.state.stepInfo?.copy(
-                stepName = step.name,
+                name = step.name,
             ),
         ),
         step = step,
@@ -194,10 +194,10 @@ data class PreCheckoutChatStepContext(
         update = context.update,
         state = context.state.copy(
             flowInfo = context.state.flowInfo?.copy(
-                flowName = step.flow.id,
+                name = step.flow.id,
             ),
             stepInfo = context.state.stepInfo?.copy(
-                stepName = step.name,
+                name = step.name,
             ),
         ),
         step = step,
@@ -234,10 +234,10 @@ data class SuccessfulPaymentChatStepContext(
         update = context.update,
         state = context.state.copy(
             flowInfo = context.state.flowInfo?.copy(
-                flowName = step.flow.id,
+                name = step.flow.id,
             ),
             stepInfo = context.state.stepInfo?.copy(
-                stepName = step.name,
+                name = step.name,
             ),
         ),
         step = step,
@@ -274,10 +274,10 @@ data class TextChatStepContext(
         update = context.update,
         state = context.state.copy(
             flowInfo = context.state.flowInfo?.copy(
-                flowName = step.flow.id,
+                name = step.flow.id,
             ),
             stepInfo = context.state.stepInfo?.copy(
-                stepName = step.name,
+                name = step.name,
             ),
         ),
         step = step,

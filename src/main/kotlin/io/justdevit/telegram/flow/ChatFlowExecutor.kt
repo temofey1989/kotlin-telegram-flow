@@ -64,6 +64,7 @@ import io.justdevit.telegram.flow.model.SuspendableChatStepContext
 import io.justdevit.telegram.flow.model.SuspendedChatStepExecutionResult
 import io.justdevit.telegram.flow.model.TextChatContext
 import io.justdevit.telegram.flow.model.TextChatStepContext
+import java.time.Instant.now
 
 /**
  * The [ChatFlowExecutor] class is responsible for managing chat flows and steps.
@@ -140,8 +141,8 @@ class ChatFlowExecutor(
 
     private suspend fun executeForStep(context: ChatContext) {
         with(context) {
-            val flowName = state.flowInfo?.flowName ?: return
-            val stepName = state.stepInfo?.stepName ?: return
+            val flowName = state.flowInfo?.name ?: return
+            val stepName = state.stepInfo?.name ?: return
             val flow = flowsMap[flowName]
             if (flow == null) {
                 publishChatFlowNotFound(flowName, this)
@@ -332,9 +333,10 @@ class ChatFlowExecutor(
     private suspend fun ChatStepContext.toFlowStarted() {
         with(state) {
             flowInfo = ChatFlowInfo(
-                flowName = flow.id,
-                flowState = ChatFlowState.ACTIVE,
-                flowData = SimpleChatFlowData(),
+                name = flow.id,
+                state = ChatFlowState.ACTIVE,
+                data = SimpleChatFlowData(),
+                started = now(),
             )
             stepInfo = null
             eventBus.coPublish(ChatFlowStarted(context = this@toFlowStarted))
@@ -344,8 +346,9 @@ class ChatFlowExecutor(
     context(ChatStep)
     private suspend fun ChatStepContext.toStepStarted() {
         state.stepInfo = ChatStepInfo(
-            stepName = name,
-            stepState = ChatStepState.STARTED,
+            name = name,
+            state = ChatStepState.STARTED,
+            started = now(),
         )
         eventBus.coPublish(ChatStepStarted(context = this@toStepStarted))
     }
@@ -353,8 +356,9 @@ class ChatFlowExecutor(
     context(ChatStep)
     private suspend fun ChatStepContext.toStepSuspended() {
         state.stepInfo = ChatStepInfo(
-            stepName = name,
-            stepState = ChatStepState.SUSPENDED,
+            name = name,
+            state = ChatStepState.SUSPENDED,
+            started = now(),
         )
         eventBus.coPublish(ChatStepSuspended(context = this@toStepSuspended))
     }
@@ -362,8 +366,12 @@ class ChatFlowExecutor(
     context(ChatStep)
     private suspend fun ChatStepContext.toStepCompleted() {
         state.stepInfo = ChatStepInfo(
-            stepName = name,
-            stepState = ChatStepState.COMPLETED,
+            name = name,
+            state = ChatStepState.COMPLETED,
+            started = state.stepInfo
+                ?.started
+                ?: now().also { log.warn { "Started timestamp is not set for completion of the step [$name]. Current timestamp will be used as started timestamp." } },
+            finished = now(),
         )
         eventBus.coPublish(ChatStepCompleted(context = this@toStepCompleted))
     }
@@ -371,8 +379,12 @@ class ChatFlowExecutor(
     context(ChatStep)
     private suspend fun ChatStepContext.toStepTerminated() {
         state.stepInfo = ChatStepInfo(
-            stepName = name,
-            stepState = ChatStepState.TERMINATED,
+            name = name,
+            state = ChatStepState.TERMINATED,
+            started = state.stepInfo
+                ?.started
+                ?: now().also { log.warn { "Started timestamp is not set for termination of the step [$name]. Current timestamp will be used as started timestamp." } },
+            finished = now(),
             errorMessage = null,
         )
         eventBus.coPublish(ChatStepTerminated(context = this@toStepTerminated))
@@ -381,8 +393,12 @@ class ChatFlowExecutor(
     context(ChatStep)
     private suspend fun ChatStepContext.toStepFailed(error: Throwable) {
         state.stepInfo = ChatStepInfo(
-            stepName = name,
-            stepState = ChatStepState.FAILED,
+            name = name,
+            state = ChatStepState.FAILED,
+            started = state.stepInfo
+                ?.started
+                ?: now().also { log.warn { "Started timestamp is not set for failure of the step [$name]. Current timestamp will be used as started timestamp." } },
+            finished = now(),
             errorMessage = error.message,
         )
         eventBus.coPublish(ChatStepFailed(context = this@toStepFailed, throwable = error))
@@ -392,8 +408,15 @@ class ChatFlowExecutor(
     private suspend fun ChatStepContext.toFlowCompleted() {
         with(state) {
             flowInfo = flowInfo?.copy(
-                flowState = ChatFlowState.COMPLETED,
-            )
+                state = ChatFlowState.COMPLETED,
+                finished = now(),
+            ) ?: ChatFlowInfo(
+                name = flow.id,
+                state = ChatFlowState.COMPLETED,
+                data = SimpleChatFlowData(),
+                started = now(),
+                finished = now(),
+            ).also { log.warn { "Flow [$name] has not been defined and for completion action. Default data will be used." } }
             stepInfo = null
         }
         eventBus.coPublish(ChatFlowCompleted(context = this@toFlowCompleted))
@@ -401,9 +424,19 @@ class ChatFlowExecutor(
 
     context(ChatStep)
     private suspend fun ChatStepContext.toFlowTerminated() {
-        state.flowInfo = state.flowInfo?.copy(
-            flowState = ChatFlowState.TERMINATED,
-        )
+        with(state) {
+            flowInfo = flowInfo?.copy(
+                state = ChatFlowState.TERMINATED,
+                finished = now(),
+            ) ?: ChatFlowInfo(
+                name = flow.id,
+                state = ChatFlowState.TERMINATED,
+                data = SimpleChatFlowData(),
+                started = now(),
+                finished = now(),
+            ).also { log.warn { "Flow [$name] has not been defined and for termination action. Default data will be used." } }
+            stepInfo = null
+        }
         eventBus.coPublish(ChatFlowTerminated(context = this@toFlowTerminated))
     }
 }

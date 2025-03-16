@@ -132,7 +132,7 @@ fun ChatStepContext.location(coordinates: GeoCoordinates, saveResponseId: Boolea
                         ?: IllegalStateException("No exception for location message.")
                 )
             if (saveResponseId) {
-                state.flowInfo?.flowData += (step.name to ServerMessageId(message.messageId))
+                state.flowInfo?.data += (step.name to ServerMessageId(message.messageId))
             }
             message
         }
@@ -148,7 +148,7 @@ fun ChatStepContext.location(coordinates: GeoCoordinates, saveResponseId: Boolea
  * @return The chat flow data associated with the current chat flow, casted to type [T].
  * @throws ClassCastException if the flow data cannot be cast to type [T].
  */
-inline fun <reified T : ChatFlowData> ChatStepContext.data(): T = (state.flowInfo?.flowData ?: throw IllegalStateException("No flow data exist in current chat state.")) as T
+inline fun <reified T : ChatFlowData> ChatStepContext.data(): T = (state.flowInfo?.data ?: throw IllegalStateException("No flow data exist in current chat state.")) as T
 
 /**
  * Executes an action on the chat flow data of the current step.
@@ -383,11 +383,11 @@ context(ChatStepContext)
 fun TelegramBotResult<Message>.storeSuccessful(saveResponseId: Boolean): Message {
     onSuccess {
         if (saveResponseId) {
-            state.flowInfo?.flowData += (step.name to ServerMessageId(it.messageId))
+            state.flowInfo?.data += (step.name to ServerMessageId(it.messageId))
             ChatStepContext.log.debug {
                 val messageIds = state
                     .flowInfo
-                    ?.flowData
+                    ?.data
                     ?.stepMessageIds[step.name]
                     ?.map { id -> id.toString() } ?: emptyList()
                 "New response message [${it.messageId}] has been registered for step [${step.name}]. Registered massages: $messageIds"
@@ -410,7 +410,7 @@ inline fun <reified T : MessageId> ChatStepContext.clearStepMessages(stepName: S
     with(
         state
             .flowInfo
-            ?.flowData
+            ?.data
             ?.stepMessageIds[stepName] ?: return,
     ) {
         filterIsInstance<T>().forEach {
@@ -447,7 +447,7 @@ inline fun <reified T : MessageId> ChatStepContext.clearPreviousStepMessages() =
  */
 fun ChatStepContext.clearFlowMessages() {
     state.flowInfo
-        ?.flowData
+        ?.data
         ?.clearMessages()
 }
 
