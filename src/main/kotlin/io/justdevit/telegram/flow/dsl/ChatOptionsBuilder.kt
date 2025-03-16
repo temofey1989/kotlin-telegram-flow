@@ -4,7 +4,7 @@ import io.justdevit.telegram.flow.model.ChatOption
 import io.justdevit.telegram.flow.model.ChatOptions
 
 /**
- * A builder class for constructing a [io.justdevit.telegram.flow.model.ChatOptions] object with multiple chat option configurations.
+ * A builder class for constructing a [ChatOptions] object with multiple chat option configurations.
  *
  * @param question The main question or prompt to use in the chat options.
  */
@@ -43,9 +43,9 @@ class ChatOptionsBuilder(private val question: String) {
     fun option(vararg options: Pair<Any, String?>) = option(options.toList())
 
     /**
-     * Constructs and returns a [io.justdevit.telegram.flow.model.ChatOptions] object using the current configuration of the builder.
+     * Constructs and returns a [ChatOptions] object using the current configuration of the builder.
      *
-     * @return A [io.justdevit.telegram.flow.model.ChatOptions] instance containing the configured question and list of chat options.
+     * @return A [ChatOptions] instance containing the configured question and list of chat options.
      */
     fun build() =
         ChatOptions(

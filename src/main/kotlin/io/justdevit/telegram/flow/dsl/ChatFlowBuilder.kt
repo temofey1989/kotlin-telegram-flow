@@ -16,12 +16,12 @@ import io.justdevit.telegram.flow.model.SuspendableChatStepContext
 import io.justdevit.telegram.flow.model.TextChatStepContext
 
 /**
- * A builder class used to define and construct a [io.justdevit.telegram.flow.model.ChatFlow] by specifying its steps and optional menu configuration.
+ * A builder class used to define and construct a [ChatFlow] by specifying its steps and optional menu configuration.
  *
  * @property id The ID of the chat flow being built. It must not be blank or contain whitespaces.
- * @property menu An optional [io.justdevit.telegram.flow.model.ChatMenu] that can be associated with this chat flow to define commands or actions for interaction.
+ * @property menu An optional [ChatMenu] that can be associated with this chat flow to define commands or actions for interaction.
  *
- * This class allows adding and configuring chat steps within a flow and provides functionality to build the final [io.justdevit.telegram.flow.model.ChatFlow].
+ * This class allows adding and configuring chat steps within a flow and provides functionality to build the final [ChatFlow].
  * Each chat step represents a distinct interaction point in the flow and can optionally be suspendable for awaiting specific events.
  */
 open class ChatFlowBuilder(var id: String, var menu: ChatMenu? = null) {
@@ -34,9 +34,9 @@ open class ChatFlowBuilder(var id: String, var menu: ChatMenu? = null) {
         get() = steps.lastOrNull()
 
     /**
-     * Builds a [io.justdevit.telegram.flow.model.ChatFlow] instance based on the current configuration of the builder.
+     * Builds a [ChatFlow] instance based on the current configuration of the builder.
      *
-     * @return A new [io.justdevit.telegram.flow.model.ChatFlow] instance initialized with the builder's state.
+     * @return A new [ChatFlow] instance initialized with the builder's state.
      */
     fun build() =
         ChatFlow(id = id, menu = menu, steps = steps.toList()).also {
@@ -50,7 +50,7 @@ open class ChatFlowBuilder(var id: String, var menu: ChatMenu? = null) {
     /**
      * Declares a step within a chat flow, associating the given execution logic with the step name.
      *
-     * @param execution A suspendable function that defines the behavior of the step, executed in the context of [io.justdevit.telegram.flow.model.ChatStepContext].
+     * @param execution A suspendable function that defines the behavior of the step, executed in the context of [ChatStepContext].
      */
     operator fun String.invoke(execution: suspend ChatStepContext.() -> Unit) = step(this, execution)
 

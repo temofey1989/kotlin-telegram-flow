@@ -7,7 +7,7 @@ import io.justdevit.telegram.flow.model.MessageId
 /**
  * Adds a message identifier to the list of identifiers associated with a specific step in the chat flow.
  *
- * @param pair A pair consisting of the step identifier as a [String] and the message identifier as a [io.justdevit.telegram.flow.model.MessageId].
+ * @param pair A pair consisting of the step identifier as a [String] and the message identifier as a [MessageId].
  */
 operator fun ChatFlowData?.plusAssign(pair: Pair<String, MessageId>) {
     with(this ?: return) {
