@@ -343,7 +343,7 @@ fun stopFlow(): Unit = throw StopFlow
  * in case of an exception. If an unexpected exception occurs, it triggers a redirection to the specified step.
  *
  * @param stepName The name of the current step, extracted by removing the suspended step marker. Defaults to the
- *                 current step's name unless explicitly provided.
+ *                 particular non-suspended step's name unless explicitly provided.
  * @param block The block of code to be executed within the context of the current step.
  * @throws Goto When an exception occurs that requires a redirection to a specific step.
  * @throws GoPrevious Indicates a transition to the previous step.
@@ -352,7 +352,7 @@ fun stopFlow(): Unit = throw StopFlow
  * @throws StartFlow Indicates the start of a new flow execution.
  */
 context(T)
-inline fun <T : SuspendableChatStepContext> withFallback(stepName: String = step.name.removeSuffix(SUSPENDED_STEP_MARKER), block: () -> Unit) =
+inline fun <T : SuspendableChatStepContext> withFallback(stepName: String = step.name.substringBefore(SUSPENDED_STEP_MARKER), block: () -> Unit) =
     try {
         block()
     } catch (throwable: Throwable) {

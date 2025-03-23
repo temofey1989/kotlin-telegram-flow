@@ -4,6 +4,7 @@ import io.justdevit.kotlin.boost.logging.Logging
 import io.justdevit.telegram.flow.CALLBACK_SUSPENDED_STEP_MARKER
 import io.justdevit.telegram.flow.PRE_CHECKOUT_SUSPENDED_STEP_MARKER
 import io.justdevit.telegram.flow.SUCCESSFUL_PAYMENT_SUSPENDED_STEP_MARKER
+import io.justdevit.telegram.flow.SUSPENDED_STEP_MARKER
 import io.justdevit.telegram.flow.TEXT_SUSPENDED_STEP_MARKER
 import io.justdevit.telegram.flow.model.CallbackChatStepContext
 import io.justdevit.telegram.flow.model.ChatFlow
@@ -164,22 +165,21 @@ open class ChatFlowBuilder(var id: String, var menu: ChatMenu? = null) {
         fallback: Boolean = true,
         action: suspend T.() -> Unit,
     ): ChatStep {
-        require(lastStep != null && !lastStep!!.suspendable) {
+        require(stepMap[this@ChatStep.name] != null) {
             "No previous step has been added to the await processing."
         }
-        val previousStep = lastStep!!
+        val previousStep = this@ChatStep
         val step = ChatStep(
-            name = "${previousStep.name}$marker",
+            name = "${previousStep.name.substringBefore(SUSPENDED_STEP_MARKER)}$marker",
             suspendable = true,
             action = {
-                with(this@ChatStep as T) {
-                    if (fallback) {
-                        withFallback(stepName = previousStep.name) {
-                            this.action()
-                        }
-                    } else {
-                        this.action()
+                val context = this as T
+                if (fallback) {
+                    withFallback(stepName = previousStep.name) {
+                        context.action()
                     }
+                } else {
+                    context.action()
                 }
             },
         )
