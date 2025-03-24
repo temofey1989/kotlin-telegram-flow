@@ -159,6 +159,6 @@ data class ChatExecutionStarted(val context: ChatStepContext, override val times
  */
 data class ChatExecutionCompleted(
     override val timestamp: Instant = now(),
-    val context: ChatContext,
+    val context: ChatStepContext,
     val history: List<ChatStepExecutionSnapshot> = emptyList(),
 ) : ChatEvent()

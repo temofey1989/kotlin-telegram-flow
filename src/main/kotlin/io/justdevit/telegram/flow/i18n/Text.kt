@@ -63,8 +63,9 @@ object Texts {
             language,
             buildMap {
                 val content = this::class.java
-                    .getResource("/text${language.takeIf { it.isNotEmpty() }?.let { "_${it.lowercase()}" } ?: ""}.yaml")!!
-                    .readText()
+                    .getResource("/text${language.takeIf { it.isNotEmpty() }?.let { "_${it.lowercase()}" } ?: ""}.yaml")
+                    ?.readText()
+                    ?: throw IllegalArgumentException("Cannot find text resource for language: [$language].")
                 val map = ObjectMapper(YAMLFactory()).readValue<Map<Any, Any>>(content)
                 map.forEach {
                     this.propagate(it.key.toString(), it.value)

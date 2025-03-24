@@ -210,7 +210,7 @@ class ChatFlowExecutor(
         }
         eventBus.coPublish(
             ChatExecutionCompleted(
-                context = context,
+                context = stepContext,
                 history = history,
             ),
         )
