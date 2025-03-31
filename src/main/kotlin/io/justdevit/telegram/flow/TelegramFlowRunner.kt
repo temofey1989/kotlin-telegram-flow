@@ -16,9 +16,9 @@ import com.github.kotlintelegrambot.entities.Update
 import com.github.kotlintelegrambot.extensions.filters.Filter
 import com.github.kotlintelegrambot.extensions.filters.Filter.Command
 import com.github.kotlintelegrambot.logging.LogLevel
-import io.justdevit.kotlin.boost.eventbus.DefaultEventBus
 import io.justdevit.kotlin.boost.eventbus.EventBus
 import io.justdevit.kotlin.boost.eventbus.EventListener
+import io.justdevit.kotlin.boost.eventbus.SimpleEventBus
 import io.justdevit.kotlin.boost.extension.randomString
 import io.justdevit.kotlin.boost.extension.runIf
 import io.justdevit.kotlin.boost.logging.withCoTracing
@@ -57,7 +57,7 @@ class TelegramFlowRunner(
     private val token: String,
     private val flows: List<ChatFlow> = emptyList(),
     private val logLevel: LogLevel = LogLevel.Error,
-    private val eventBus: EventBus = DefaultEventBus(),
+    private val eventBus: EventBus = SimpleEventBus(),
     private val chatStateStore: ChatStateStore = InMemoryChatStateStore(),
     private val errorHandler: TelegramBotErrorHandler = TelegramFlowRunnerErrorLogger(),
 ) {
@@ -252,7 +252,7 @@ class TelegramFlowRunner(
                     action()
                 }
             } catch (throwable: Throwable) {
-                eventBus.coPublish(TelegramBotExecutionFailure(update, throwable))
+                eventBus.publish(TelegramBotExecutionFailure(update, throwable))
             }
         }
     }

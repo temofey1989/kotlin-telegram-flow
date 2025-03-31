@@ -150,7 +150,7 @@ class ChatFlowExecutor(
                 val step = flow.stepMap[stepName]
                 if (step == null) {
                     log.debug { "Unknown step: [$stepName] of flow [$flowName]" }
-                    eventBus.coPublish(
+                    eventBus.publish(
                         ChatStepNotFound(
                             flow = flow,
                             stepName = stepName,
@@ -194,7 +194,7 @@ class ChatFlowExecutor(
 
     private suspend fun publishChatFlowNotFound(flowName: String, context: ChatContext) {
         log.debug { "Unknown flow: [$flowName]" }
-        eventBus.coPublish(ChatFlowNotFound(flowName, context))
+        eventBus.publish(ChatFlowNotFound(flowName, context))
     }
 
     private suspend fun ChatStep.execute(context: ChatContext) {
@@ -202,13 +202,13 @@ class ChatFlowExecutor(
         var next: ChatStep? = this
         var stepContext = context.toStepContext(this)
 
-        eventBus.coPublish(ChatExecutionStarted(stepContext))
+        eventBus.publish(ChatExecutionStarted(stepContext))
         while (next != null) {
             next = next.execute(stepContext, history)?.also {
                 stepContext = ContinuationChatStepContext(stepContext, it)
             }
         }
-        eventBus.coPublish(
+        eventBus.publish(
             ChatExecutionCompleted(
                 context = stepContext,
                 history = history,
@@ -339,7 +339,7 @@ class ChatFlowExecutor(
                 started = now(),
             )
             stepInfo = null
-            eventBus.coPublish(ChatFlowStarted(context = this@toFlowStarted))
+            eventBus.publish(ChatFlowStarted(context = this@toFlowStarted))
         }
     }
 
@@ -350,7 +350,7 @@ class ChatFlowExecutor(
             state = ChatStepState.STARTED,
             started = now(),
         )
-        eventBus.coPublish(ChatStepStarted(context = this@toStepStarted))
+        eventBus.publish(ChatStepStarted(context = this@toStepStarted))
     }
 
     context(ChatStep)
@@ -360,7 +360,7 @@ class ChatFlowExecutor(
             state = ChatStepState.SUSPENDED,
             started = now(),
         )
-        eventBus.coPublish(ChatStepSuspended(context = this@toStepSuspended))
+        eventBus.publish(ChatStepSuspended(context = this@toStepSuspended))
     }
 
     context(ChatStep)
@@ -373,7 +373,7 @@ class ChatFlowExecutor(
                 ?: now().also { log.warn { "Started timestamp is not set for completion of the step [$name]. Current timestamp will be used as started timestamp." } },
             finished = now(),
         )
-        eventBus.coPublish(ChatStepCompleted(context = this@toStepCompleted))
+        eventBus.publish(ChatStepCompleted(context = this@toStepCompleted))
     }
 
     context(ChatStep)
@@ -387,7 +387,7 @@ class ChatFlowExecutor(
             finished = now(),
             errorMessage = null,
         )
-        eventBus.coPublish(ChatStepTerminated(context = this@toStepTerminated))
+        eventBus.publish(ChatStepTerminated(context = this@toStepTerminated))
     }
 
     context(ChatStep)
@@ -401,7 +401,7 @@ class ChatFlowExecutor(
             finished = now(),
             errorMessage = error.message,
         )
-        eventBus.coPublish(ChatStepFailed(context = this@toStepFailed, throwable = error))
+        eventBus.publish(ChatStepFailed(context = this@toStepFailed, throwable = error))
     }
 
     context(ChatStep)
@@ -419,7 +419,7 @@ class ChatFlowExecutor(
             ).also { log.warn { "Flow [$name] has not been defined and for completion action. Default data will be used." } }
             stepInfo = null
         }
-        eventBus.coPublish(ChatFlowCompleted(context = this@toFlowCompleted))
+        eventBus.publish(ChatFlowCompleted(context = this@toFlowCompleted))
     }
 
     context(ChatStep)
@@ -437,6 +437,6 @@ class ChatFlowExecutor(
             ).also { log.warn { "Flow [$name] has not been defined and for termination action. Default data will be used." } }
             stepInfo = null
         }
-        eventBus.coPublish(ChatFlowTerminated(context = this@toFlowTerminated))
+        eventBus.publish(ChatFlowTerminated(context = this@toFlowTerminated))
     }
 }
