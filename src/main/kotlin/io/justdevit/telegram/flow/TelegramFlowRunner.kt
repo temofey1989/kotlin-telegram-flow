@@ -16,8 +16,10 @@ import com.github.kotlintelegrambot.entities.Update
 import com.github.kotlintelegrambot.extensions.filters.Filter
 import com.github.kotlintelegrambot.extensions.filters.Filter.Command
 import com.github.kotlintelegrambot.logging.LogLevel
+import io.justdevit.kotlin.boost.eventbus.Event
 import io.justdevit.kotlin.boost.eventbus.EventBus
 import io.justdevit.kotlin.boost.eventbus.EventListener
+import io.justdevit.kotlin.boost.eventbus.EventListenerRegister
 import io.justdevit.kotlin.boost.eventbus.SimpleEventBus
 import io.justdevit.kotlin.boost.extension.randomString
 import io.justdevit.kotlin.boost.extension.runIf
@@ -30,6 +32,7 @@ import io.justdevit.telegram.flow.model.ChatFlow
 import io.justdevit.telegram.flow.model.ChatState
 import io.justdevit.telegram.flow.model.ChatStateExtractionContext
 import io.justdevit.telegram.flow.model.CommandChatContext
+import io.justdevit.telegram.flow.model.EventChatContext
 import io.justdevit.telegram.flow.model.PreCheckoutChatContext
 import io.justdevit.telegram.flow.model.SuccessfulPaymentChatContext
 import io.justdevit.telegram.flow.model.TelegramBotExecutionFailure
@@ -60,7 +63,7 @@ class TelegramFlowRunner(
     private val eventBus: EventBus = SimpleEventBus(),
     private val chatStateStore: ChatStateStore = InMemoryChatStateStore(),
     private val errorHandler: TelegramBotErrorHandler = TelegramFlowRunnerErrorLogger(),
-) {
+) : EventListenerRegister {
 
     lateinit var bot: Bot
     private var ready = false
@@ -96,7 +99,7 @@ class TelegramFlowRunner(
      *
      * @param listeners The event listeners to be registered.
      */
-    fun register(vararg listeners: EventListener<*>) {
+    override fun register(vararg listeners: EventListener<*>) {
         eventBus.register(*listeners)
     }
 
@@ -105,11 +108,36 @@ class TelegramFlowRunner(
      *
      * @param listeners The event listeners to be unregistered.
      */
-    fun unregister(vararg listeners: EventListener<*>) {
+    override fun unregister(vararg listeners: EventListener<*>) {
         eventBus.unregister(*listeners)
     }
 
-    private fun configure() {
+    /**
+     * Publishes an event to a specified chat context, allowing it to be processed
+     * within the framework's event-driven flow.
+     *
+     * @param chatId The unique identifier of the chat where the event is being published.
+     * @param event The event instance to be published and executed in the chat context.
+     */
+    suspend fun <E : Event> publish(chatId: Long, event: E) {
+        val update = Update(updateId = -1)
+        extractChatState(chatId, update)?.also {
+            EventChatContext(
+                bot = bot,
+                state = it,
+                update = update,
+                event = event,
+            ).execute()
+        }
+    }
+
+    /**
+     * Configures the Telegram bot instance and prepares it for operation.
+     *
+     * The bot will not be reconfigured after the initial setup, as indicated by the
+     * readiness flag that ensures one-time initialization.
+     */
+    fun configure() {
         if (ready) {
             return
         }
@@ -257,7 +285,10 @@ class TelegramFlowRunner(
         }
     }
 
-    private suspend fun extractChatState(chatId: Long, update: Update) = chatStateStore.extract(chatId, ChatStateExtractionContext(update, this))?.enrichMetadata()
+    private suspend fun extractChatState(chatId: Long, update: Update) =
+        chatStateStore
+            .extract(chatId, ChatStateExtractionContext(update, this))
+            ?.enrichMetadata()
 
     private suspend fun ChatContext.execute() {
         flowExecutor.execute(this)

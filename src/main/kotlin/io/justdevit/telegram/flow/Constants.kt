@@ -36,14 +36,19 @@ const val PRE_CHECKOUT_SUSPENDED_STEP_MARKER = "${SUSPENDED_STEP_MARKER}pre_chec
 const val TEXT_SUSPENDED_STEP_MARKER = "${SUSPENDED_STEP_MARKER}text"
 
 /**
+ * Represents a marker constant used to signify a suspended step with an "event" designation.
+ */
+const val EVENT_SUSPENDED_STEP_MARKER = "${SUSPENDED_STEP_MARKER}event"
+
+/**
  * Marker string constant indicating the "payment" step in a suspended flow.
  */
 const val SUCCESSFUL_PAYMENT_SUSPENDED_STEP_MARKER = "${SUSPENDED_STEP_MARKER}successful_payment"
 
 /**
- * A delimiter used for separating parts of callback data in Telegram bot flows.
+ * A delimiter used for separating parts of data in Telegram Bot lows.
  */
-const val CALLBACK_DATA_DELIMITER = "|"
+const val DATA_DELIMITER = "|"
 
 /**
  * Specifies the lifetime of short messages in the Telegram Flow, represented as a duration.

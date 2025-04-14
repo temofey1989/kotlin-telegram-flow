@@ -12,8 +12,8 @@ import com.github.kotlintelegrambot.entities.payments.LabeledPrice
 import com.github.kotlintelegrambot.entities.payments.PaymentInvoiceInfo
 import com.github.kotlintelegrambot.types.TelegramBotResult
 import com.github.kotlintelegrambot.types.TelegramBotResult.Error
-import io.justdevit.telegram.flow.CALLBACK_DATA_DELIMITER
 import io.justdevit.telegram.flow.CALLBACK_SUSPENDED_STEP_MARKER
+import io.justdevit.telegram.flow.DATA_DELIMITER
 import io.justdevit.telegram.flow.SHORT_MESSAGE_LIFETIME
 import io.justdevit.telegram.flow.SUSPENDED_STEP_MARKER
 import io.justdevit.telegram.flow.extension.sendPdf
@@ -184,7 +184,7 @@ fun ChatStepContext.options(
         }.build()
     ChatStepContext.log.debug { "Sending options to chat [${state.chatId}]: ${select.items.joinToString { it.joinToString { item -> item.value } }}" }
 
-    val callbackDataPrefix = "${step.fullName}${if (step.suspendable) "" else CALLBACK_SUSPENDED_STEP_MARKER}${CALLBACK_DATA_DELIMITER}"
+    val callbackDataPrefix = "${step.fullName}${if (step.suspendable) "" else CALLBACK_SUSPENDED_STEP_MARKER}${DATA_DELIMITER}"
     val callbacks = select
         .items
         .map { list ->

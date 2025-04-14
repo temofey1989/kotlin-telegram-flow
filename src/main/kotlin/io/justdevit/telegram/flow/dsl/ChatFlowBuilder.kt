@@ -1,7 +1,10 @@
 package io.justdevit.telegram.flow.dsl
 
+import io.justdevit.kotlin.boost.eventbus.Event
 import io.justdevit.kotlin.boost.logging.Logging
 import io.justdevit.telegram.flow.CALLBACK_SUSPENDED_STEP_MARKER
+import io.justdevit.telegram.flow.DATA_DELIMITER
+import io.justdevit.telegram.flow.EVENT_SUSPENDED_STEP_MARKER
 import io.justdevit.telegram.flow.PRE_CHECKOUT_SUSPENDED_STEP_MARKER
 import io.justdevit.telegram.flow.SUCCESSFUL_PAYMENT_SUSPENDED_STEP_MARKER
 import io.justdevit.telegram.flow.SUSPENDED_STEP_MARKER
@@ -11,10 +14,12 @@ import io.justdevit.telegram.flow.model.ChatFlow
 import io.justdevit.telegram.flow.model.ChatMenu
 import io.justdevit.telegram.flow.model.ChatStep
 import io.justdevit.telegram.flow.model.ChatStepContext
+import io.justdevit.telegram.flow.model.EventChatStepContext
 import io.justdevit.telegram.flow.model.PreCheckoutChatStepContext
 import io.justdevit.telegram.flow.model.SuccessfulPaymentChatStepContext
 import io.justdevit.telegram.flow.model.SuspendableChatStepContext
 import io.justdevit.telegram.flow.model.TextChatStepContext
+import kotlin.reflect.KClass
 
 /**
  * A builder class used to define and construct a [ChatFlow] by specifying its steps and optional menu configuration.
@@ -112,7 +117,12 @@ open class ChatFlowBuilder(var id: String, var menu: ChatMenu? = null) {
      * @param action A suspendable action that is executed in the [TextChatStepContext] when the text input is received.
      * @return Newly created suspended step.
      */
-    fun ChatStep.awaitText(fallback: Boolean = true, action: suspend TextChatStepContext.() -> Unit) = await(TEXT_SUSPENDED_STEP_MARKER, fallback, action)
+    fun ChatStep.awaitText(fallback: Boolean = true, action: suspend TextChatStepContext.() -> Unit) =
+        await(
+            marker = TEXT_SUSPENDED_STEP_MARKER,
+            fallback = fallback,
+            action = action,
+        )
 
     /**
      * Awaits a callback-based input at the current chat step and executes the specified suspendable action
@@ -122,7 +132,12 @@ open class ChatFlowBuilder(var id: String, var menu: ChatMenu? = null) {
      * @param action A suspendable action that is executed in the [CallbackChatStepContext] when the callback input is received.
      * @return Newly created suspended step.
      */
-    fun ChatStep.awaitCallback(fallback: Boolean = true, action: suspend CallbackChatStepContext.() -> Unit) = await(CALLBACK_SUSPENDED_STEP_MARKER, fallback, action)
+    fun ChatStep.awaitCallback(fallback: Boolean = true, action: suspend CallbackChatStepContext.() -> Unit) =
+        await(
+            marker = CALLBACK_SUSPENDED_STEP_MARKER,
+            fallback = fallback,
+            action = action,
+        )
 
     /**
      * Awaits a pre-checkout-based input at the current chat step and executes the specified suspendable action
@@ -134,9 +149,9 @@ open class ChatFlowBuilder(var id: String, var menu: ChatMenu? = null) {
      */
     fun ChatStep.awaitPreCheckout(fallback: Boolean = true, action: suspend PreCheckoutChatStepContext.() -> Unit) =
         await(
-            PRE_CHECKOUT_SUSPENDED_STEP_MARKER,
-            fallback,
-            action,
+            marker = PRE_CHECKOUT_SUSPENDED_STEP_MARKER,
+            fallback = fallback,
+            action = action,
         )
 
     /**
@@ -158,9 +173,48 @@ open class ChatFlowBuilder(var id: String, var menu: ChatMenu? = null) {
         return await(SUCCESSFUL_PAYMENT_SUSPENDED_STEP_MARKER, fallback, action)
     }
 
-    context(ChatStep)
+    /**
+     * Awaits an event of the specified type at the current chat step and executes the provided action
+     * within the context of the corresponding event type.
+     *
+     * @param E The type of the event to await.
+     * @param eventType The class of the event to await. Only events of this type will trigger the action.
+     * @param fallback Determines whether to fall back to the previous step if the current execution fails. Defaults to `true`.
+     * @param action A suspendable function that is executed in the context of [EventChatStepContext] specific to the awaited event type.
+     * @return Newly created suspended step.
+     */
+    @Suppress("UNCHECKED_CAST")
+    fun <E : Event> ChatStep.awaitEventForType(
+        eventType: KClass<E>,
+        fallback: Boolean = true,
+        action: suspend EventChatStepContext<E>.() -> Unit,
+    ) = await<EventChatStepContext<*>>(
+        marker = "${EVENT_SUSPENDED_STEP_MARKER}${DATA_DELIMITER}${eventType.qualifiedName}",
+        fallback = fallback,
+    ) {
+        if (eventType.isInstance(event)) {
+            action(this as EventChatStepContext<E>)
+        }
+    }
+
+    /**
+     * Awaits an event of the specified type during the execution of a chat step and performs the provided action
+     * when the event is received.
+     *
+     * @param E The type of the event to be awaited. This must extend the [Event] class.
+     * @param fallback Determines whether to fall back to the previous step if the execution of the current step fails. Defaults to `true`.
+     * @param action A suspendable function that is executed in the context of [EventChatStepContext] specific to the awaited event type.
+     * @return Newly created suspended step.
+     */
+    inline fun <reified E : Event> ChatStep.awaitEvent(fallback: Boolean = true, noinline action: suspend EventChatStepContext<E>.() -> Unit) =
+        awaitEventForType(
+            eventType = E::class,
+            fallback = fallback,
+            action = action,
+        )
+
     @Suppress("LABEL_NAME_CLASH", "UNCHECKED_CAST")
-    private fun <T : SuspendableChatStepContext> await(
+    private fun <T : SuspendableChatStepContext> ChatStep.await(
         marker: String,
         fallback: Boolean = true,
         action: suspend T.() -> Unit,

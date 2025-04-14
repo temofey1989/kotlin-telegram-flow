@@ -51,6 +51,8 @@ import io.justdevit.telegram.flow.model.CommandChatContext
 import io.justdevit.telegram.flow.model.CommandChatStepContext
 import io.justdevit.telegram.flow.model.CompletedChatStepExecutionResult
 import io.justdevit.telegram.flow.model.ContinuationChatStepContext
+import io.justdevit.telegram.flow.model.EventChatContext
+import io.justdevit.telegram.flow.model.EventChatStepContext
 import io.justdevit.telegram.flow.model.FailedChatStepExecutionResult
 import io.justdevit.telegram.flow.model.FlowJumpChatStepExecutionResult
 import io.justdevit.telegram.flow.model.PreCheckoutChatContext
@@ -126,6 +128,7 @@ class ChatFlowExecutor(
             is CallbackChatContext -> executeForStep(context)
             is PreCheckoutChatContext -> executeForStep(context)
             is SuccessfulPaymentChatContext -> executeForStep(context)
+            is EventChatContext<*> -> executeForStep(context)
         }
     }
 
@@ -174,6 +177,10 @@ class ChatFlowExecutor(
                 suspendable && name.endsWith(TEXT_SUSPENDED_STEP_MARKER)
             }
 
+            is EventChatContext<*> -> {
+                suspendable && name.substringBefore(DATA_DELIMITER).endsWith(EVENT_SUSPENDED_STEP_MARKER)
+            }
+
             is CallbackChatContext -> {
                 suspendable &&
                     name.endsWith(CALLBACK_SUSPENDED_STEP_MARKER) &&
@@ -192,7 +199,7 @@ class ChatFlowExecutor(
             }
         }
 
-    private suspend fun publishChatFlowNotFound(flowName: String, context: ChatContext) {
+    private fun publishChatFlowNotFound(flowName: String, context: ChatContext) {
         log.debug { "Unknown flow: [$flowName]" }
         eventBus.publish(ChatFlowNotFound(flowName, context))
     }
@@ -223,6 +230,7 @@ class ChatFlowExecutor(
             is CallbackChatContext -> CallbackChatStepContext(context = this, step = step)
             is PreCheckoutChatContext -> PreCheckoutChatStepContext(context = this, step = step)
             is SuccessfulPaymentChatContext -> SuccessfulPaymentChatStepContext(context = this, step = step)
+            is EventChatContext<*> -> EventChatStepContext(context = this, step = step)
         }
 
     private suspend fun ChatStep.execute(context: ChatStepContext, history: MutableList<ChatStepExecutionSnapshot>): ChatStep? {
@@ -269,7 +277,7 @@ class ChatFlowExecutor(
             }
         }
 
-    private suspend fun ChatStep.processThrowable(throwable: Throwable, context: ChatStepContext) =
+    private fun ChatStep.processThrowable(throwable: Throwable, context: ChatStepContext) =
         when (throwable) {
             is Goto -> {
                 val stepName = throwable.stepName
@@ -330,7 +338,7 @@ class ChatFlowExecutor(
     }
 
     context(ChatStep)
-    private suspend fun ChatStepContext.toFlowStarted() {
+    private fun ChatStepContext.toFlowStarted() {
         with(state) {
             flowInfo = ChatFlowInfo(
                 name = flow.id,
@@ -344,7 +352,7 @@ class ChatFlowExecutor(
     }
 
     context(ChatStep)
-    private suspend fun ChatStepContext.toStepStarted() {
+    private fun ChatStepContext.toStepStarted() {
         state.stepInfo = ChatStepInfo(
             name = name,
             state = ChatStepState.STARTED,
@@ -354,7 +362,7 @@ class ChatFlowExecutor(
     }
 
     context(ChatStep)
-    private suspend fun ChatStepContext.toStepSuspended() {
+    private fun ChatStepContext.toStepSuspended() {
         state.stepInfo = ChatStepInfo(
             name = name,
             state = ChatStepState.SUSPENDED,
@@ -364,7 +372,7 @@ class ChatFlowExecutor(
     }
 
     context(ChatStep)
-    private suspend fun ChatStepContext.toStepCompleted() {
+    private fun ChatStepContext.toStepCompleted() {
         state.stepInfo = ChatStepInfo(
             name = name,
             state = ChatStepState.COMPLETED,
@@ -377,7 +385,7 @@ class ChatFlowExecutor(
     }
 
     context(ChatStep)
-    private suspend fun ChatStepContext.toStepTerminated() {
+    private fun ChatStepContext.toStepTerminated() {
         state.stepInfo = ChatStepInfo(
             name = name,
             state = ChatStepState.TERMINATED,
@@ -391,7 +399,7 @@ class ChatFlowExecutor(
     }
 
     context(ChatStep)
-    private suspend fun ChatStepContext.toStepFailed(error: Throwable) {
+    private fun ChatStepContext.toStepFailed(error: Throwable) {
         state.stepInfo = ChatStepInfo(
             name = name,
             state = ChatStepState.FAILED,
@@ -405,7 +413,7 @@ class ChatFlowExecutor(
     }
 
     context(ChatStep)
-    private suspend fun ChatStepContext.toFlowCompleted() {
+    private fun ChatStepContext.toFlowCompleted() {
         with(state) {
             flowInfo = flowInfo?.copy(
                 state = ChatFlowState.COMPLETED,
@@ -423,7 +431,7 @@ class ChatFlowExecutor(
     }
 
     context(ChatStep)
-    private suspend fun ChatStepContext.toFlowTerminated() {
+    private fun ChatStepContext.toFlowTerminated() {
         with(state) {
             flowInfo = flowInfo?.copy(
                 state = ChatFlowState.TERMINATED,

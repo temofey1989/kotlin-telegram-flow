@@ -5,6 +5,7 @@ import com.github.kotlintelegrambot.entities.CallbackQuery
 import com.github.kotlintelegrambot.entities.Update
 import com.github.kotlintelegrambot.entities.payments.PreCheckoutQuery
 import com.github.kotlintelegrambot.entities.payments.SuccessfulPayment
+import io.justdevit.kotlin.boost.eventbus.Event
 import io.justdevit.kotlin.boost.logging.Logging
 import io.justdevit.telegram.flow.extension.value
 
@@ -282,5 +283,45 @@ data class TextChatStepContext(
         ),
         step = step,
         text = context.text,
+    )
+}
+
+/**
+ * Represents the context of a specific step in an event-based chat flow.
+ *
+ * @property bot The bot instance responsible for handling the current chat interaction.
+ * @property update The update object containing the details of the update triggering this step.
+ * @property state The current state of the chat, including flow and step contextual information.
+ * @property step The current step in the flow being executed.
+ * @property event The event content of the message in the chat interaction.
+ */
+data class EventChatStepContext<E : Event>(
+    override val bot: Bot,
+    override val update: Update,
+    override val state: ChatState,
+    override val step: ChatStep,
+    val event: E,
+) : SuspendableChatStepContext {
+
+    /**
+     * Initializes a new instance of [EventChatStepContext] from a [EventChatContext]
+     * and a [ChatStep]. The flow name and step name in the state are updated as part of this initialization.
+     *
+     * @param context The [EventChatContext] containing the base information for this step.
+     * @param step The [ChatStep] that represents the context of the current flow step.
+     */
+    constructor(context: EventChatContext<E>, step: ChatStep) : this(
+        bot = context.bot,
+        update = context.update,
+        state = context.state.copy(
+            flowInfo = context.state.flowInfo?.copy(
+                name = step.flow.id,
+            ),
+            stepInfo = context.state.stepInfo?.copy(
+                name = step.name,
+            ),
+        ),
+        step = step,
+        event = context.event,
     )
 }

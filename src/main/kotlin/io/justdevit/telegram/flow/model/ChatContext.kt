@@ -5,6 +5,7 @@ import com.github.kotlintelegrambot.entities.CallbackQuery
 import com.github.kotlintelegrambot.entities.Update
 import com.github.kotlintelegrambot.entities.payments.PreCheckoutQuery
 import com.github.kotlintelegrambot.entities.payments.SuccessfulPayment
+import io.justdevit.kotlin.boost.eventbus.Event
 
 /**
  * Represents the context of an ongoing chat interaction.
@@ -105,4 +106,19 @@ data class TextChatContext(
     override val update: Update,
     override val state: ChatState,
     val text: String,
+) : SuspendableChatContext
+
+/**
+ * Represents the context of an event-based chat interaction.
+ *
+ * @property bot The bot instance handling the interaction.
+ * @property update The update object containing the update details.
+ * @property state The current state of the chat, including metadata and contextual information.
+ * @property event The event content within the chat interaction.
+ */
+data class EventChatContext<E : Event>(
+    override val bot: Bot,
+    override val update: Update,
+    override val state: ChatState,
+    val event: E,
 ) : SuspendableChatContext
