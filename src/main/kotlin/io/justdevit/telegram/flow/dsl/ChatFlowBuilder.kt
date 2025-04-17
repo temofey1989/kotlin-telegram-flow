@@ -110,6 +110,18 @@ open class ChatFlowBuilder(var id: String, var menu: ChatMenu? = null) {
     infix fun ChatStep.awaitPayment(action: suspend SuccessfulPaymentChatStepContext.() -> Unit) = awaitPayment(true, action)
 
     /**
+     * Awaits an event of the specified type at the current chat step and executes the provided action when the event is received.
+     *
+     * @param E The type of the event to be awaited. This must extend the [Event] class.
+     * @param action A suspendable function to be executed in the context of [EventChatStepContext] for the awaited event type.
+     */
+    inline infix fun <reified E : Event> ChatStep.awaitEvent(noinline action: suspend EventChatStepContext<E>.() -> Unit) =
+        awaitEventForType(
+            eventType = E::class,
+            action = action,
+        )
+
+    /**
      * Awaits a text-based input at the current chat step and executes the specified suspendable action
      * within the provided context.
      *
