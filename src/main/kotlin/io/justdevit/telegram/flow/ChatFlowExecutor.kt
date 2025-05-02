@@ -178,7 +178,17 @@ class ChatFlowExecutor(
             }
 
             is EventChatContext<*> -> {
-                suspendable && name.substringBefore(DATA_DELIMITER).endsWith(EVENT_SUSPENDED_STEP_MARKER)
+                val baseName = name.substringBefore(DATA_DELIMITER)
+                val eventName = name.substringAfter(DATA_DELIMITER)
+                suspendable &&
+                    baseName.endsWith(EVENT_SUSPENDED_STEP_MARKER) &&
+                    try {
+                        val eventClass = Class.forName(eventName).kotlin
+                        eventClass.isInstance(context.event)
+                    } catch (e: ClassNotFoundException) {
+                        log.warn(e) { "No class found for event: [$eventName]" }
+                        false
+                    }
             }
 
             is CallbackChatContext -> {
