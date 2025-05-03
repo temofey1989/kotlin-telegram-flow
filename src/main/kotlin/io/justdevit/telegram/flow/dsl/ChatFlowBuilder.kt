@@ -170,7 +170,7 @@ open class ChatFlowBuilder(var id: String, var menu: ChatMenu? = null) {
      * Awaits a successful-payment at the current chat step and executes the specified suspendable action
      * within the provided context. In case no pre-checkout step, default will be generated.
      *
-     * NOTE: Default Pre-Checkout step will just confirm checkout.
+     * NOTE: A default Pre-Checkout step will just confirm checkout.
      *
      * @param fallback Determines whether to fall back to the previous step if the current execution fails. Defaults to `true`.
      * @param action A suspendable action that is executed in the [SuccessfulPaymentChatStepContext] when the successful payment has received.

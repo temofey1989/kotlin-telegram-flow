@@ -263,6 +263,13 @@ class ChatFlowExecutor(
     suspend fun ChatStep.invoke(context: ChatStepContext): ChatStepExecutionResult =
         withCoSpanId(forceNew = true) {
             try {
+                val previousFlowName = context
+                    .state
+                    .flowInfo
+                    ?.name
+                if (flow.id != previousFlowName) {
+                    context.toTerminatedPreviousFlow()
+                }
                 if (isFirst) {
                     log.debug { "Flow [${flow.id}] has started." }
                     context.toFlowStarted()
@@ -456,5 +463,19 @@ class ChatFlowExecutor(
             stepInfo = null
         }
         eventBus.publish(ChatFlowTerminated(context = this@toFlowTerminated))
+    }
+
+    private fun ChatStepContext.toTerminatedPreviousFlow() {
+        state.stepInfo?.apply {
+            state = ChatStepState.TERMINATED
+            finished = now()
+            errorMessage = null
+            eventBus.publish(ChatStepTerminated(context = this@toTerminatedPreviousFlow))
+        }
+        state.flowInfo?.apply {
+            state = ChatFlowState.TERMINATED
+            finished = now()
+            eventBus.publish(ChatFlowTerminated(context = this@toTerminatedPreviousFlow))
+        }
     }
 }

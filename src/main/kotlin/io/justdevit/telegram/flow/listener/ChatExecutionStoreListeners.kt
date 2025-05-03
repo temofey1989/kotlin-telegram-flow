@@ -22,7 +22,7 @@ import io.justdevit.telegram.flow.model.ChatStepTerminated
  * This class listens for events of type [ChatFlowNotFound] and uses an instance of the [ChatStateStore]
  * to store the actual state.
  *
- * @property stateStore A store which will be user do store a state.
+ * @property stateStore A store for the Chat State.
  */
 class ChatFlowNotFoundListener(private val stateStore: ChatStateStore) : EventListener<ChatFlowNotFound> {
 
@@ -42,7 +42,7 @@ class ChatFlowNotFoundListener(private val stateStore: ChatStateStore) : EventLi
  * This class listens for events of type [ChatFlowNotFound] and uses an instance of the [ChatStateStore]
  * to store the actual state.
  *
- * @property stateStore A store which will be user do store a state.
+ * @property stateStore A store for the Chat State.
  */
 class ChatStepNotFoundListener(private val stateStore: ChatStateStore) : EventListener<ChatStepNotFound> {
 
@@ -62,7 +62,7 @@ class ChatStepNotFoundListener(private val stateStore: ChatStateStore) : EventLi
  * This class listens for events of type [ChatFlowNotFound] and uses an instance of the [ChatStateStore]
  * to store the actual state.
  *
- * @property stateStore A store which will be user do store a state.
+ * @property stateStore A store for the Chat State.
  */
 class ChatFlowStartedListener(private val stateStore: ChatStateStore) : EventListener<ChatFlowStarted> {
 
@@ -82,7 +82,7 @@ class ChatFlowStartedListener(private val stateStore: ChatStateStore) : EventLis
  * This class listens for events of type [ChatFlowNotFound] and uses an instance of the [ChatStateStore]
  * to store the actual state.
  *
- * @property stateStore A store which will be user do store a state.
+ * @property stateStore A store for the Chat State.
  */
 class ChatFlowCompletedListener(private val stateStore: ChatStateStore) : EventListener<ChatFlowCompleted> {
 
@@ -102,7 +102,7 @@ class ChatFlowCompletedListener(private val stateStore: ChatStateStore) : EventL
  * This class listens for events of type [ChatFlowNotFound] and uses an instance of the [ChatStateStore]
  * to store the actual state.
  *
- * @property stateStore A store which will be user do store a state.
+ * @property stateStore A store for the Chat State.
  */
 class ChatFlowTerminatedListener(private val stateStore: ChatStateStore) : EventListener<ChatFlowTerminated> {
 
@@ -122,7 +122,7 @@ class ChatFlowTerminatedListener(private val stateStore: ChatStateStore) : Event
  * This class listens for events of type [ChatFlowNotFound] and uses an instance of the [ChatStateStore]
  * to store the actual state.
  *
- * @property stateStore A store which will be user do store a state.
+ * @property stateStore A Store that will be user stores a state.
  */
 class ChatStepStartedListener(private val stateStore: ChatStateStore) : EventListener<ChatStepStarted> {
 
@@ -142,7 +142,7 @@ class ChatStepStartedListener(private val stateStore: ChatStateStore) : EventLis
  * This class listens for events of type [ChatFlowNotFound] and uses an instance of the [ChatStateStore]
  * to store the actual state.
  *
- * @property stateStore A store which will be user do store a state.
+ * @property stateStore A store for the Chat State.
  */
 class ChatStepCompletedListener(private val stateStore: ChatStateStore) : EventListener<ChatStepCompleted> {
 
@@ -162,7 +162,7 @@ class ChatStepCompletedListener(private val stateStore: ChatStateStore) : EventL
  * This class listens for events of type [ChatFlowNotFound] and uses an instance of the [ChatStateStore]
  * to store the actual state.
  *
- * @property stateStore A store which will be user do store a state.
+ * @property stateStore A store for the Chat State.
  */
 class ChatStepSuspendedListener(private val stateStore: ChatStateStore) : EventListener<ChatStepSuspended> {
 
@@ -182,7 +182,7 @@ class ChatStepSuspendedListener(private val stateStore: ChatStateStore) : EventL
  * This class listens for events of type [ChatFlowNotFound] and uses an instance of the [ChatStateStore]
  * to store the actual state.
  *
- * @property stateStore A store which will be user do store a state.
+ * @property stateStore A store for the Chat State.
  */
 class ChatStepTerminatedListener(private val stateStore: ChatStateStore) : EventListener<ChatStepTerminated> {
 
@@ -202,7 +202,7 @@ class ChatStepTerminatedListener(private val stateStore: ChatStateStore) : Event
  * This class listens for events of type [ChatFlowNotFound] and uses an instance of the [ChatStateStore]
  * to store the actual state.
  *
- * @property stateStore A store which will be user do store a state.
+ * @property stateStore A store for the Chat State.
  */
 class ChatStepFailedListener(private val stateStore: ChatStateStore) : EventListener<ChatStepFailed> {
 
@@ -222,7 +222,7 @@ class ChatStepFailedListener(private val stateStore: ChatStateStore) : EventList
  * This class listens for events of type [ChatFlowNotFound] and uses an instance of the [ChatStateStore]
  * to store the actual state.
  *
- * @property stateStore A store which will be user do store a state.
+ * @property stateStore A store for the Chat State.
  */
 class ChatExecutionStartedListener(private val stateStore: ChatStateStore) : EventListener<ChatExecutionStarted> {
 
@@ -242,7 +242,7 @@ class ChatExecutionStartedListener(private val stateStore: ChatStateStore) : Eve
  * This class listens for events of type [ChatFlowNotFound] and uses an instance of the [ChatStateStore]
  * to store the actual state.
  *
- * @property stateStore A store which will be user do store a state.
+ * @property stateStore A store for the Chat State.
  */
 class ChatExecutionCompletedListener(private val stateStore: ChatStateStore) : EventListener<ChatExecutionCompleted> {
 
