@@ -135,7 +135,7 @@ class ChatFlowExecutor(
 
     private suspend fun startFlow(context: CommandChatContext) {
         val flowName = context.command
-        if (context.isDifferentFlowActive(flowName)) {
+        if (context.hasActiveFlow()) {
             context.toTerminatedPreviousFlow()
         }
         val flow = flowsMap[flowName]
@@ -146,9 +146,7 @@ class ChatFlowExecutor(
         }
     }
 
-    private fun ChatContext.isDifferentFlowActive(flowName: String) =
-        flowName != state.flowInfo?.name &&
-            state.flowInfo?.state == ChatFlowState.ACTIVE
+    private fun ChatContext.hasActiveFlow() = state.flowInfo?.state == ChatFlowState.ACTIVE
 
     private suspend fun executeForStep(context: ChatContext) {
         with(context) {
