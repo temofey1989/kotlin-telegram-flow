@@ -34,6 +34,36 @@ sealed interface ChatStepContext {
 }
 
 /**
+ * Represents the context of a termination step within a chat flow.
+ *
+ * @property bot The bot instance handling the chat.
+ * @property update The incoming update triggering this step in the flow.
+ * @property state The current state of the chat, capturing details like chat ID, language, and metadata.
+ * @property step The current step being executed within the chat flow.
+ */
+data class TerminationChatStepContext(
+    override val bot: Bot,
+    override val update: Update,
+    override val state: ChatState,
+    override val step: ChatStep,
+) : ChatStepContext {
+
+    /**
+     * Secondary constructor for creating a [TerminationChatStepContext] from an existing [ChatContext]
+     * and a specific [ChatStep].
+     *
+     * @param context The [ChatContext] containing the bot, update, and chat state.
+     * @param step The [ChatStep] representing the termination step within the chat flow.
+     */
+    constructor(context: ChatContext, step: ChatStep) : this(
+        bot = context.bot,
+        update = context.update,
+        state = context.state,
+        step = step,
+    )
+}
+
+/**
  * A specialized implementation of [ChatStepContext] that represents the context of a chat flow step
  * triggered by a command. This class provides additional information specific to command-based interactions,
  * such as the command used and its associated arguments.

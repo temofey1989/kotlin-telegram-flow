@@ -64,6 +64,7 @@ import io.justdevit.telegram.flow.model.SuccessfulPaymentChatContext
 import io.justdevit.telegram.flow.model.SuccessfulPaymentChatStepContext
 import io.justdevit.telegram.flow.model.SuspendableChatStepContext
 import io.justdevit.telegram.flow.model.SuspendedChatStepExecutionResult
+import io.justdevit.telegram.flow.model.TerminationChatStepContext
 import io.justdevit.telegram.flow.model.TextChatContext
 import io.justdevit.telegram.flow.model.TextChatStepContext
 import java.time.Instant.now
@@ -134,6 +135,9 @@ class ChatFlowExecutor(
 
     private suspend fun startFlow(context: CommandChatContext) {
         val flowName = context.command
+        if (context.isDifferentFlowActive(flowName)) {
+            context.toTerminatedPreviousFlow()
+        }
         val flow = flowsMap[flowName]
         if (flow == null) {
             publishChatFlowNotFound(flowName, context)
@@ -141,6 +145,10 @@ class ChatFlowExecutor(
             flow.firstStep.execute(context)
         }
     }
+
+    private fun ChatContext.isDifferentFlowActive(flowName: String) =
+        flowName != state.flowInfo?.name &&
+            state.flowInfo?.state == ChatFlowState.ACTIVE
 
     private suspend fun executeForStep(context: ChatContext) {
         with(context) {
@@ -263,30 +271,23 @@ class ChatFlowExecutor(
     suspend fun ChatStep.invoke(context: ChatStepContext): ChatStepExecutionResult =
         withCoSpanId(forceNew = true) {
             try {
-                val previousFlowName = context
-                    .state
-                    .flowInfo
-                    ?.name
-                if (flow.id != previousFlowName) {
-                    context.toTerminatedPreviousFlow()
-                }
                 if (isFirst) {
                     log.debug { "Flow [${flow.id}] has started." }
                     context.toFlowStarted()
                 }
                 if (suspendable && context !is SuspendableChatStepContext) {
                     log.debug { "Step [$fullName] has suspend for chat [${context.state.chatId}]." }
-                    context.toStepSuspended()
+                    context.toStepSuspended(this)
                     return@withCoSpanId SuspendedChatStepExecutionResult()
                 }
                 log.debug { "Step [$fullName] invoke has started for chat [${context.state.chatId}]..." }
-                context.toStepStarted()
+                context.toStepStarted(this)
                 action(context)
-                context.toStepCompleted()
+                context.toStepCompleted(this)
                 log.debug { "Step [$fullName] invoke has completed for chat [${context.state.chatId}]." }
                 if (isLast) {
                     log.debug { "Flow [${flow.id}] has finished." }
-                    context.toFlowCompleted()
+                    context.toFlowCompleted(this)
                 }
                 CompletedChatStepExecutionResult()
             } catch (throwable: Throwable) {
@@ -299,7 +300,7 @@ class ChatFlowExecutor(
             is Goto -> {
                 val stepName = throwable.stepName
                 log.debug { "Moving to [$stepName] step from [$name]." }
-                context.toStepTerminated()
+                context.toStepTerminated(this)
                 StepJumpChatStepExecutionResult(
                     jumpStep = flow.stepMap[stepName]
                         ?: throw IllegalArgumentException("Step [$stepName] does not exist!"),
@@ -310,7 +311,7 @@ class ChatFlowExecutor(
                 log.debug { "Moving to next step from [$name]." }
                 val nextStep = terminateAndFind(next) { it.next }
                     ?: throw IllegalArgumentException("No next step found for step [$name].")
-                context.toStepTerminated()
+                context.toStepTerminated(this)
                 StepJumpChatStepExecutionResult(jumpStep = nextStep)
             }
 
@@ -318,30 +319,30 @@ class ChatFlowExecutor(
                 log.debug { "Moving to previous step from [$name]." }
                 val previousStep = terminateAndFind(previous) { it.previous }
                     ?: throw IllegalArgumentException("No previous step found for step [$name].")
-                context.toStepTerminated()
+                context.toStepTerminated(this)
                 StepJumpChatStepExecutionResult(jumpStep = previousStep)
             }
 
             is StartFlow -> {
                 log.debug { "Starting new flow [${throwable.flowName}] from [$fullName] step." }
-                context.toStepTerminated()
+                context.toStepTerminated(this)
                 if (isLast)
-                    context.toFlowCompleted()
+                    context.toFlowCompleted(this)
                 else
-                    context.toFlowTerminated()
+                    context.toFlowTerminated(this)
                 FlowJumpChatStepExecutionResult(jumpFlowName = throwable.flowName)
             }
 
             is StopFlow -> {
                 log.debug { "Terminating flow [${flow.id}] from [$fullName] step." }
-                context.toStepTerminated()
-                context.toFlowTerminated()
+                context.toStepTerminated(this)
+                context.toFlowTerminated(this)
                 StopFlowChatStepExecutionResult()
             }
 
             else -> {
                 log.debug { "Failed step [$name] step on flow [${flow.id}]." }
-                context.toStepFailed(throwable)
+                context.toStepFailed(this, throwable)
                 FailedChatStepExecutionResult(throwable = throwable)
             }
         }
@@ -354,7 +355,6 @@ class ChatFlowExecutor(
         return nextStep
     }
 
-    context(ChatStep)
     private fun ChatStepContext.toFlowStarted() {
         with(state) {
             flowInfo = ChatFlowInfo(
@@ -368,114 +368,114 @@ class ChatFlowExecutor(
         }
     }
 
-    context(ChatStep)
-    private fun ChatStepContext.toStepStarted() {
+    private fun ChatStepContext.toStepStarted(step: ChatStep) {
         state.stepInfo = ChatStepInfo(
-            name = name,
+            name = step.name,
             state = ChatStepState.STARTED,
             started = now(),
         )
         eventBus.publish(ChatStepStarted(context = this@toStepStarted))
     }
 
-    context(ChatStep)
-    private fun ChatStepContext.toStepSuspended() {
+    private fun ChatStepContext.toStepSuspended(step: ChatStep) {
         state.stepInfo = ChatStepInfo(
-            name = name,
+            name = step.name,
             state = ChatStepState.SUSPENDED,
             started = now(),
         )
         eventBus.publish(ChatStepSuspended(context = this@toStepSuspended))
     }
 
-    context(ChatStep)
-    private fun ChatStepContext.toStepCompleted() {
+    private fun ChatStepContext.toStepCompleted(step: ChatStep) {
         state.stepInfo = ChatStepInfo(
-            name = name,
+            name = step.name,
             state = ChatStepState.COMPLETED,
             started = state.stepInfo
                 ?.started
-                ?: now().also { log.warn { "Started timestamp is not set for completion of the step [$name]. Current timestamp will be used as started timestamp." } },
+                ?: now().also { log.warn { "Started timestamp is not set for completion of the step [${step.name}]. Current timestamp will be used as started timestamp." } },
             finished = now(),
         )
         eventBus.publish(ChatStepCompleted(context = this@toStepCompleted))
     }
 
-    context(ChatStep)
-    private fun ChatStepContext.toStepTerminated() {
+    private fun ChatStepContext.toStepTerminated(step: ChatStep) {
         state.stepInfo = ChatStepInfo(
-            name = name,
+            name = step.name,
             state = ChatStepState.TERMINATED,
             started = state.stepInfo
                 ?.started
-                ?: now().also { log.warn { "Started timestamp is not set for termination of the step [$name]. Current timestamp will be used as started timestamp." } },
+                ?: now().also { log.warn { "Started timestamp is not set for termination of the step [${step.name}]. Current timestamp will be used as started timestamp." } },
             finished = now(),
             errorMessage = null,
         )
         eventBus.publish(ChatStepTerminated(context = this@toStepTerminated))
     }
 
-    context(ChatStep)
-    private fun ChatStepContext.toStepFailed(error: Throwable) {
+    private fun ChatStepContext.toStepFailed(step: ChatStep, error: Throwable) {
         state.stepInfo = ChatStepInfo(
-            name = name,
+            name = step.name,
             state = ChatStepState.FAILED,
             started = state.stepInfo
                 ?.started
-                ?: now().also { log.warn { "Started timestamp is not set for failure of the step [$name]. Current timestamp will be used as started timestamp." } },
+                ?: now().also { log.warn { "Started timestamp is not set for failure of the step [${step.name}]. Current timestamp will be used as started timestamp." } },
             finished = now(),
             errorMessage = error.message,
         )
         eventBus.publish(ChatStepFailed(context = this@toStepFailed, throwable = error))
     }
 
-    context(ChatStep)
-    private fun ChatStepContext.toFlowCompleted() {
+    private fun ChatStepContext.toFlowCompleted(step: ChatStep) {
         with(state) {
             flowInfo = flowInfo?.copy(
                 state = ChatFlowState.COMPLETED,
                 finished = now(),
             ) ?: ChatFlowInfo(
-                name = flow.id,
+                name = step.flow.id,
                 state = ChatFlowState.COMPLETED,
                 data = SimpleChatFlowData(),
                 started = now(),
                 finished = now(),
-            ).also { log.warn { "Flow [$name] has not been defined and for completion action. Default data will be used." } }
+            ).also { log.warn { "Flow [${step.flow.id}] has not been defined and for completion action. Default data will be used." } }
             stepInfo = null
         }
         eventBus.publish(ChatFlowCompleted(context = this@toFlowCompleted))
     }
 
-    context(ChatStep)
-    private fun ChatStepContext.toFlowTerminated() {
+    private fun ChatStepContext.toFlowTerminated(step: ChatStep) {
         with(state) {
             flowInfo = flowInfo?.copy(
                 state = ChatFlowState.TERMINATED,
                 finished = now(),
             ) ?: ChatFlowInfo(
-                name = flow.id,
+                name = step.flow.id,
                 state = ChatFlowState.TERMINATED,
                 data = SimpleChatFlowData(),
                 started = now(),
                 finished = now(),
-            ).also { log.warn { "Flow [$name] has not been defined and for termination action. Default data will be used." } }
+            ).also { log.warn { "Flow [${step.flow.id}] has not been defined and for termination action. Default data will be used." } }
             stepInfo = null
         }
         eventBus.publish(ChatFlowTerminated(context = this@toFlowTerminated))
     }
 
-    private fun ChatStepContext.toTerminatedPreviousFlow() {
-        state.stepInfo?.apply {
-            state = ChatStepState.TERMINATED
-            finished = now()
-            errorMessage = null
-            eventBus.publish(ChatStepTerminated(context = this@toTerminatedPreviousFlow))
-        }
+    private fun ChatContext.toTerminatedPreviousFlow() {
+        val flowName = state.flowInfo?.name ?: return
+        val stepName = state.stepInfo?.name ?: return
+        val step = flowsMap[flowName]?.stepMap[stepName] ?: return
+        val stepContext = TerminationChatStepContext(context = this, step = step)
+        state.stepInfo
+            ?.takeIf {
+                it.state in listOf(ChatStepState.SUSPENDED, ChatStepState.STARTED)
+            }?.apply {
+                state = ChatStepState.TERMINATED
+                finished = now()
+                errorMessage = null
+                eventBus.publish(ChatStepTerminated(context = stepContext))
+            }
         state.flowInfo?.apply {
             state = ChatFlowState.TERMINATED
             finished = now()
-            eventBus.publish(ChatFlowTerminated(context = this@toTerminatedPreviousFlow))
+            eventBus.publish(ChatFlowTerminated(context = stepContext))
         }
     }
 }
