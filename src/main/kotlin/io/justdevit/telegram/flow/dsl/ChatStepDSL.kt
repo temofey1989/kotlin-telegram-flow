@@ -4,6 +4,7 @@ import com.github.kotlintelegrambot.entities.InlineKeyboardMarkup
 import com.github.kotlintelegrambot.entities.Message
 import com.github.kotlintelegrambot.entities.ParseMode
 import com.github.kotlintelegrambot.entities.ParseMode.MARKDOWN_V2
+import com.github.kotlintelegrambot.entities.TelegramFile
 import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
 import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton.CallbackData
 import com.github.kotlintelegrambot.entities.payments.LabeledPrice
@@ -13,8 +14,11 @@ import io.justdevit.telegram.flow.CALLBACK_SUSPENDED_STEP_MARKER
 import io.justdevit.telegram.flow.DATA_DELIMITER
 import io.justdevit.telegram.flow.SHORT_MESSAGE_LIFETIME
 import io.justdevit.telegram.flow.SUSPENDED_STEP_MARKER
+import io.justdevit.telegram.flow.extension.isMarkdown
 import io.justdevit.telegram.flow.extension.sendPdf
+import io.justdevit.telegram.flow.extension.toTelegramBotResult
 import io.justdevit.telegram.flow.i18n.T
+import io.justdevit.telegram.flow.i18n.escapeMarkdown
 import io.justdevit.telegram.flow.model.ChatFlowData
 import io.justdevit.telegram.flow.model.ChatStepContext
 import io.justdevit.telegram.flow.model.GeoCoordinates
@@ -34,22 +38,34 @@ import kotlin.time.Duration
  *
  * @param parseMode The parse mode used for formatting the message text. Defaults to [MARKDOWN_V2].
  * @param saveResponseId A boolean indicating whether the message ID of the response should be saved. Defaults to `true`.
+ * @param image The image to be sent within the message. Defaults to `null`.
  * @param supplier A lambda function providing the text to be sent as a message.
  * @return The [Message] object representing the sent message.
  */
 fun ChatStepContext.message(
     parseMode: ParseMode? = MARKDOWN_V2,
     saveResponseId: Boolean = true,
+    image: TelegramFile? = null,
     supplier: () -> String,
 ): Message {
-    val text = supplier()
+    val text = supplier().let { if (parseMode.isMarkdown()) it.escapeMarkdown() else it }
     ChatStepContext.log.debug { "Sending text to chat [${state.chatId}]: $text" }
-    return bot
-        .sendMessage(
-            chatId = state.botChatId,
-            text = text,
-            parseMode = parseMode,
-        ).storeSuccessful(saveResponseId)
+    return (
+        if (image != null)
+            bot
+                .sendPhoto(
+                    chatId = state.botChatId,
+                    photo = image,
+                    caption = text,
+                    parseMode = parseMode,
+                ).toTelegramBotResult()
+        else
+            bot.sendMessage(
+                chatId = state.botChatId,
+                text = text,
+                parseMode = parseMode,
+            )
+    ).storeSuccessful(saveResponseId)
 }
 
 /**
@@ -57,13 +73,20 @@ fun ChatStepContext.message(
  *
  * @param displayDuration The duration for which the message will remain visible before being deleted. Defaults to [SHORT_MESSAGE_LIFETIME].
  * @param parseMode The parse mode used for formatting the message text. Defaults to [MARKDOWN_V2].
+ * @param image The image to be sent within the message. Defaults to `null`.
  * @param supplier A supplier function providing the content of the message.
  */
 suspend fun ChatStepContext.shortMessage(
     displayDuration: Duration = SHORT_MESSAGE_LIFETIME,
     parseMode: ParseMode? = MARKDOWN_V2,
+    image: TelegramFile? = null,
     supplier: () -> String,
-) = message(parseMode = parseMode, saveResponseId = false, supplier = supplier).apply {
+) = message(
+    parseMode = parseMode,
+    saveResponseId = false,
+    image = image,
+    supplier = supplier,
+).apply {
     delay(displayDuration)
     bot.deleteMessage(chatId = this@shortMessage.state.botChatId, messageId = messageId)
 }
@@ -73,6 +96,7 @@ suspend fun ChatStepContext.shortMessage(
  *
  * @param url The URL that the link should direct to.
  * @param label The label for the clickable link button. Defaults to "➡️ Link".
+ * @param image The image to be sent within the message. Defaults to `null`.
  * @param parseMode The parse mode to format the text of the message. Defaults to `MARKDOWN_V2`.
  * @param saveResponseId A flag indicating whether the response message ID should be saved. Defaults to `true`.
  * @param supplier A supplier lambda producing the text message content. Defaults to a lambda that returns the URL as a string.
@@ -81,20 +105,34 @@ suspend fun ChatStepContext.shortMessage(
 fun ChatStepContext.sendLink(
     url: URL,
     label: String = "➡\uFE0F Link",
+    image: TelegramFile? = null,
     parseMode: ParseMode? = MARKDOWN_V2,
     saveResponseId: Boolean = true,
     supplier: () -> String = { url.toString() },
 ): Message {
-    val text = supplier()
+    val text = supplier().let { if (parseMode.isMarkdown()) it.escapeMarkdown() else it }
+    val replyMarkup = InlineKeyboardMarkup.createSingleButton(
+        InlineKeyboardButton.Url(text = label, url = url.toString()),
+    )
     ChatStepContext.log.debug { "Sending Link to chat [${state.chatId}]: $url" }
-    return bot
-        .sendMessage(
-            chatId = state.botChatId,
-            text = text,
-            parseMode = parseMode,
-            replyMarkup = InlineKeyboardMarkup.createSingleButton(
-                InlineKeyboardButton.Url(text = label, url = url.toString()),
-            ),
+    return (
+        if (image != null) {
+            bot
+                .sendPhoto(
+                    chatId = state.botChatId,
+                    photo = image,
+                    caption = text,
+                    parseMode = parseMode,
+                    replyMarkup = replyMarkup,
+                ).toTelegramBotResult()
+        } else {
+            bot.sendMessage(
+                chatId = state.botChatId,
+                text = text,
+                parseMode = parseMode,
+                replyMarkup = replyMarkup,
+            )
+        }
         ).storeSuccessful(saveResponseId)
 }
 
@@ -103,6 +141,7 @@ fun ChatStepContext.sendLink(
  *
  * @param url The URL to which the link should direct. It is provided as a string.
  * @param label The text label of the clickable link button. Defaults to "➡️ Link".
+ * @param image The image to be sent within the message. Defaults to `null`.
  * @param parseMode The parse mode for formatting the text of the message. Defaults to `MARKDOWN_V2`.
  * @param saveResponseId Whether the response message ID should be saved. Defaults to `true`.
  * @param supplier A lambda function that supplies the text content of the message. By default, it returns the provided URL as a string.
@@ -111,6 +150,7 @@ fun ChatStepContext.sendLink(
 fun ChatStepContext.sendLink(
     url: String,
     label: String = "➡\uFE0F Link",
+    image: TelegramFile? = null,
     parseMode: ParseMode? = MARKDOWN_V2,
     saveResponseId: Boolean = true,
     supplier: () -> String = { url },
@@ -118,6 +158,7 @@ fun ChatStepContext.sendLink(
     url = URI.create(url).toURL(),
     label = label,
     parseMode = parseMode,
+    image = image,
     saveResponseId = saveResponseId,
     supplier = supplier,
 )
@@ -181,6 +222,7 @@ inline fun <reified T : ChatFlowData> ChatStepContext.data(action: T.() -> Unit)
  * Sends a question with options to the chat and builds an inline keyboard for user responses.
  *
  * @param question The question or prompt to display to the user.
+ * @param image The image to be sent within the message. Defaults to `null`.
  * @param parseMode The parse mode for formatting the message text, defaults to [MARKDOWN_V2].
  * @param saveResponseId A flag indicating whether to save the response message ID, defaults to `true`.
  * @param block A lambda configuring the options for the chat using a [ChatOptionsBuilder].
@@ -188,11 +230,12 @@ inline fun <reified T : ChatFlowData> ChatStepContext.data(action: T.() -> Unit)
  */
 fun ChatStepContext.options(
     question: String,
+    image: TelegramFile? = null,
     parseMode: ParseMode? = MARKDOWN_V2,
     saveResponseId: Boolean = true,
     block: ChatOptionsBuilder.() -> Unit,
 ): Message {
-    val select = ChatOptionsBuilder(question)
+    val select = ChatOptionsBuilder(if (parseMode.isMarkdown()) question.escapeMarkdown() else question)
         .also {
             it.block()
         }.build()
@@ -207,12 +250,25 @@ fun ChatStepContext.options(
             }
         }
 
-    return bot
-        .sendMessage(
-            chatId = state.botChatId,
-            text = select.question,
-            parseMode = parseMode,
-            replyMarkup = InlineKeyboardMarkup.create(*callbacks.toTypedArray()),
+    val replyMarkup = InlineKeyboardMarkup.create(*callbacks.toTypedArray())
+    return (
+        if (image != null)
+            bot
+                .sendPhoto(
+                    chatId = state.botChatId,
+                    photo = image,
+                    caption = select.question,
+                    parseMode = parseMode,
+                    replyMarkup = replyMarkup,
+                ).toTelegramBotResult()
+        else
+            bot
+                .sendMessage(
+                    chatId = state.botChatId,
+                    text = select.question,
+                    parseMode = parseMode,
+                    replyMarkup = replyMarkup,
+                )
         ).storeSuccessful(saveResponseId)
 }
 

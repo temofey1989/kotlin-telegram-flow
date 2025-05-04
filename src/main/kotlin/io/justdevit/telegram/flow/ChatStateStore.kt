@@ -47,7 +47,15 @@ class InMemoryChatStateStore : ChatStateStore {
 
     private val states = ConcurrentHashMap<ChatStateKey, ChatState>()
 
-    override suspend fun extract(chatId: Long, context: ChatStateExtractionContext) = states[ChatStateKey(chatId, context.runner.name)]
+    override suspend fun extract(chatId: Long, context: ChatStateExtractionContext): ChatState? {
+        val key = ChatStateKey(chatId, context.runner.name)
+        return states.computeIfAbsent(key) {
+            ChatState(
+                chatId = chatId,
+                metadata = mapOf(TELEGRAM_FLOW_RUNNER_NAME_KEY to context.runner.name),
+            )
+        }
+    }
 
     override suspend fun store(state: ChatState) {
         states[ChatStateKey(state.chatId, state.runnerName)] = state

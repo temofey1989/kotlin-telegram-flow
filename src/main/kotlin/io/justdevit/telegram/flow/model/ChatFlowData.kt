@@ -1,6 +1,11 @@
 package io.justdevit.telegram.flow.model
 
 /**
+ * Defines a mapping of step names to their respective message IDs.
+ */
+typealias StepMessageIds = MutableMap<String, MutableList<MessageId>>
+
+/**
  * Interface representing the data structure for managing chat flow steps.
  *
  * The [ChatFlowData] interface is responsible for organizing and maintaining
@@ -11,7 +16,7 @@ interface ChatFlowData {
     /**
      * A mutable map that associates step identifiers (as [String]) with lists of message identifiers ([MessageId]).
      */
-    val stepMessageIds: MutableMap<String, MutableList<MessageId>>
+    val stepMessageIds: StepMessageIds
 }
 
 /**
@@ -20,4 +25,4 @@ interface ChatFlowData {
  * @property stepMessageIds A mutable map associating step identifiers with their respective
  * lists of message identifiers ([MessageId]).
  */
-data class SimpleChatFlowData(override val stepMessageIds: MutableMap<String, MutableList<MessageId>> = mutableMapOf()) : ChatFlowData
+data class SimpleChatFlowData(override val stepMessageIds: StepMessageIds = mutableMapOf()) : ChatFlowData
