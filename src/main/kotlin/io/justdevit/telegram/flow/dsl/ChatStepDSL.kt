@@ -133,7 +133,7 @@ fun ChatStepContext.sendLink(
                 replyMarkup = replyMarkup,
             )
         }
-        ).storeSuccessful(saveResponseId)
+    ).storeSuccessful(saveResponseId)
 }
 
 /**
