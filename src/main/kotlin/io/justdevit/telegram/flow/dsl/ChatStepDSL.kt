@@ -269,7 +269,7 @@ fun ChatStepContext.options(
                     parseMode = parseMode,
                     replyMarkup = replyMarkup,
                 )
-        ).storeSuccessful(saveResponseId)
+    ).storeSuccessful(saveResponseId)
 }
 
 /**
