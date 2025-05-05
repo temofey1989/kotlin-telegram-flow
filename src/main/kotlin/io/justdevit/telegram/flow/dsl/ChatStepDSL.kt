@@ -14,11 +14,9 @@ import io.justdevit.telegram.flow.CALLBACK_SUSPENDED_STEP_MARKER
 import io.justdevit.telegram.flow.DATA_DELIMITER
 import io.justdevit.telegram.flow.SHORT_MESSAGE_LIFETIME
 import io.justdevit.telegram.flow.SUSPENDED_STEP_MARKER
-import io.justdevit.telegram.flow.extension.isMarkdown
 import io.justdevit.telegram.flow.extension.sendPdf
 import io.justdevit.telegram.flow.extension.toTelegramBotResult
 import io.justdevit.telegram.flow.i18n.T
-import io.justdevit.telegram.flow.i18n.escapeMarkdown
 import io.justdevit.telegram.flow.model.ChatFlowData
 import io.justdevit.telegram.flow.model.ChatStepContext
 import io.justdevit.telegram.flow.model.GeoCoordinates
@@ -48,7 +46,7 @@ fun ChatStepContext.message(
     image: TelegramFile? = null,
     supplier: () -> String,
 ): Message {
-    val text = supplier().let { if (parseMode.isMarkdown()) it.escapeMarkdown() else it }
+    val text = supplier()
     ChatStepContext.log.debug { "Sending text to chat [${state.chatId}]: $text" }
     return (
         if (image != null)
@@ -110,7 +108,7 @@ fun ChatStepContext.sendLink(
     saveResponseId: Boolean = true,
     supplier: () -> String = { url.toString() },
 ): Message {
-    val text = supplier().let { if (parseMode.isMarkdown()) it.escapeMarkdown() else it }
+    val text = supplier()
     val replyMarkup = InlineKeyboardMarkup.createSingleButton(
         InlineKeyboardButton.Url(text = label, url = url.toString()),
     )
@@ -235,7 +233,7 @@ fun ChatStepContext.options(
     saveResponseId: Boolean = true,
     block: ChatOptionsBuilder.() -> Unit,
 ): Message {
-    val select = ChatOptionsBuilder(if (parseMode.isMarkdown()) question.escapeMarkdown() else question)
+    val select = ChatOptionsBuilder(question)
         .also {
             it.block()
         }.build()
