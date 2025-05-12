@@ -361,7 +361,7 @@ fun ChatStepContext.rejectCheckout(preCheckoutQueryId: String, errorMessageBuild
  * @throws IllegalArgumentException if the step name is blank.
  * @throws Goto to signal the chat flow engine to redirect to the specified step.
  */
-fun ChatStepContext.goto(stepName: String) {
+fun ChatStepContext.goto(stepName: String): Nothing {
     require(stepName.isNotBlank()) {
         "Step name cannot be blank."
     }
@@ -374,7 +374,7 @@ fun ChatStepContext.goto(stepName: String) {
  * @return This method does not return a value and always throws the [GoNext] exception
  *         to signal the flow to move to the next step in the chat.
  */
-fun ChatStepContext.goNext(): Unit = throw GoNext
+fun ChatStepContext.goNext(): Nothing = throw GoNext
 
 /**
  * Moves to the previous step within the current chat flow context. This function is executed
@@ -384,7 +384,7 @@ fun ChatStepContext.goNext(): Unit = throw GoNext
  * @return This method does not return a value and always throws the [GoPrevious] exception
  *         to signal the flow to move to the previous step in the chat.
  */
-fun ChatStepContext.goPrevious(): Unit = throw GoPrevious
+fun ChatStepContext.goPrevious(): Nothing = throw GoPrevious
 
 /**
  * Initiates a new chat flow by its name within the current chat step context.
@@ -393,19 +393,19 @@ fun ChatStepContext.goPrevious(): Unit = throw GoPrevious
  * @param name The name of the flow to start.
  * @return This method does not return a value, as it throws a [StartFlow] exception.
  */
-fun ChatStepContext.startFlow(name: String): Unit = throw StartFlow(flowName = name)
+fun ChatStepContext.startFlow(name: String): Nothing = throw StartFlow(flowName = name)
 
 /**
  * Terminates the current chat flow execution.
  *
  * @throws StopFlow This exception is always thrown to indicate the flow termination.
  */
-fun ChatStepContext.stopFlow(): Unit = throw StopFlow
+fun ChatStepContext.stopFlow(): Nothing = throw StopFlow
 
 /**
  * Signals to ignore the current event in the chat flow and halts further processing.
  */
-fun EventChatStepContext<*>.ignoreEvent(): Unit = throw IgnoreEvent(event = event)
+fun EventChatStepContext<*>.ignoreEvent(): Nothing = throw IgnoreEvent(event = event)
 
 /**
  * Executes the given block of code within the context of the current chat step and provides a fallback mechanism
@@ -414,7 +414,7 @@ fun EventChatStepContext<*>.ignoreEvent(): Unit = throw IgnoreEvent(event = even
  * @param stepName The name of the current step, extracted by removing the suspended step marker. Defaults to the
  *                 particular non-suspended step's name unless explicitly provided.
  * @param block The block of code to be executed within the context of the current step.
- * @throws Goto When an exception occurs that requires a redirection to a specific step.
+ * @throws Goto When an exception occurs, that requires a redirection to a specific step.
  * @throws GoPrevious Indicates a transition to the previous step.
  * @throws GoNext Indicates a transition to the next step.
  * @throws StopFlow Indicates the termination of the current flow.
