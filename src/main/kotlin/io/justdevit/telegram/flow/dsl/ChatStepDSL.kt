@@ -429,6 +429,10 @@ inline fun <T : SuspendableChatStepContext> T.withFallback(stepName: String = st
                 throw throwable
             }
 
+            is IgnoreEvent -> {
+                throw throwable
+            }
+
             is StartFlow -> {
                 throw throwable
             }
