@@ -6,6 +6,7 @@ import io.justdevit.kotlin.boost.logging.withCoSpanId
 import io.justdevit.telegram.flow.dsl.GoNext
 import io.justdevit.telegram.flow.dsl.GoPrevious
 import io.justdevit.telegram.flow.dsl.Goto
+import io.justdevit.telegram.flow.dsl.IgnoreEvent
 import io.justdevit.telegram.flow.dsl.StartFlow
 import io.justdevit.telegram.flow.dsl.StopFlow
 import io.justdevit.telegram.flow.listener.ChatExecutionCompletedListener
@@ -336,6 +337,13 @@ class ChatFlowExecutor(
                 context.toStepTerminated(this)
                 context.toFlowTerminated(this)
                 StopFlowChatStepExecutionResult()
+            }
+
+            is IgnoreEvent -> {
+                log.debug { "Ignoring event [${throwable.event::class.qualifiedName}] for flow [${flow.id}] from [$fullName] step." }
+                log.trace { "Event: ${throwable.event}" }
+                context.toStepSuspended(this)
+                SuspendedChatStepExecutionResult()
             }
 
             else -> {

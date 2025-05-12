@@ -19,6 +19,7 @@ import io.justdevit.telegram.flow.extension.toTelegramBotResult
 import io.justdevit.telegram.flow.i18n.T
 import io.justdevit.telegram.flow.model.ChatFlowData
 import io.justdevit.telegram.flow.model.ChatStepContext
+import io.justdevit.telegram.flow.model.EventChatStepContext
 import io.justdevit.telegram.flow.model.GeoCoordinates
 import io.justdevit.telegram.flow.model.MessageId
 import io.justdevit.telegram.flow.model.ServerMessageId
@@ -400,6 +401,11 @@ fun ChatStepContext.startFlow(name: String): Unit = throw StartFlow(flowName = n
  * @throws StopFlow This exception is always thrown to indicate the flow termination.
  */
 fun ChatStepContext.stopFlow(): Unit = throw StopFlow
+
+/**
+ * Signals to ignore the current event in the chat flow and halts further processing.
+ */
+fun EventChatStepContext<*>.ignoreEvent(): Unit = throw IgnoreEvent(event = event)
 
 /**
  * Executes the given block of code within the context of the current chat step and provides a fallback mechanism
