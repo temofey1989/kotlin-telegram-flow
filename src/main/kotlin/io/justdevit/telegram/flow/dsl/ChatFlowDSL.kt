@@ -12,7 +12,7 @@ import io.justdevit.telegram.flow.model.ChatMenu
  * @param block A lambda with a receiver of type [ChatFlowBuilder] that defines the steps and optional menu configuration of the chat flow.
  * @return A [ChatFlow] instance initialized with the provided ID and the configuration defined in the block.
  */
-context(Dispatcher)
+context(_: Dispatcher)
 operator fun String.minus(block: ChatFlowBuilder.() -> Unit): ChatFlow = chatFlow(this, null, block)
 
 /**

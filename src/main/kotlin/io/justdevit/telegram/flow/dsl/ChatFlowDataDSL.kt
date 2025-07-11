@@ -23,11 +23,11 @@ operator fun ChatFlowData?.plusAssign(pair: Pair<String, MessageId>) {
  *
  * @param messageId The ID of the message to be added to the current step in the chat flow.
  */
-context(ChatStepContext)
+context(context: ChatStepContext)
 operator fun ChatFlowData?.plusAssign(messageId: MessageId) {
     with(this ?: return) {
         stepMessageIds
-            .getOrPut(step.name) { mutableListOf() }
+            .getOrPut(context.step.name) { mutableListOf() }
             .add(messageId)
     }
 }

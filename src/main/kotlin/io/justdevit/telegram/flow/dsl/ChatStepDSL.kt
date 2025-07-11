@@ -451,18 +451,20 @@ inline fun <T : SuspendableChatStepContext> T.withFallback(stepName: String = st
  * @param saveResponseId A boolean that determines whether to save the response message ID in the flow data.
  * @return The resulting [Message] obtained from the successful Telegram bot operation.
  */
-context(ChatStepContext)
+context(context: ChatStepContext)
 fun TelegramBotResult<Message>.storeSuccessful(saveResponseId: Boolean): Message {
-    onSuccess {
-        if (saveResponseId) {
-            state.flowInfo?.data += (step.name to ServerMessageId(it.messageId))
-            ChatStepContext.log.debug {
-                val messageIds = state
-                    .flowInfo
-                    ?.data
-                    ?.stepMessageIds[step.name]
-                    ?.map { id -> id.toString() } ?: emptyList()
-                "New response message [${it.messageId}] has been registered for step [${step.name}]. Registered massages: $messageIds"
+    with(context) {
+        onSuccess {
+            if (saveResponseId) {
+                state.flowInfo?.data += (step.name to ServerMessageId(it.messageId))
+                ChatStepContext.log.debug {
+                    val messageIds = state
+                        .flowInfo
+                        ?.data
+                        ?.stepMessageIds[step.name]
+                        ?.map { id -> id.toString() } ?: emptyList()
+                    "New response message [${it.messageId}] has been registered for step [${step.name}]. Registered massages: $messageIds"
+                }
             }
         }
     }
@@ -526,13 +528,15 @@ fun ChatStepContext.clearFlowMessages() {
 /**
  * Clears all messages associated with the current steps of a chat flow.
  */
-context(ChatStepContext)
+context(context: ChatStepContext)
 fun ChatFlowData.clearMessages() {
-    stepMessageIds.values.flatten().forEach {
-        bot.deleteMessage(chatId = state.botChatId, messageId = it.value)
-        ChatStepContext.log.debug { "Message [$it] has been deleted for chat: [${state.chatId}]" }
+    with(context) {
+        stepMessageIds.values.flatten().forEach {
+            bot.deleteMessage(chatId = state.botChatId, messageId = it.value)
+            ChatStepContext.log.debug { "Message [$it] has been deleted for chat: [${state.chatId}]" }
+        }
+        stepMessageIds.clear()
     }
-    stepMessageIds.clear()
 }
 
 /**
@@ -542,6 +546,6 @@ fun ChatFlowData.clearMessages() {
  * @param paramsBuilder A lambda function to define key-value pairs of parameters for placeholder replacement
  * in the localized text. Defaults to an empty parameters map.
  */
-context(ChatStepContext)
+context(context: ChatStepContext)
 @Suppress("FunctionName")
-fun T(key: String, paramsBuilder: MutableMap<String, String>.() -> Unit = {}) = T(key, state.language, paramsBuilder)
+fun T(key: String, paramsBuilder: MutableMap<String, String>.() -> Unit = {}) = T(key, context.state.language, paramsBuilder)

@@ -231,10 +231,10 @@ open class ChatFlowBuilder(var id: String, var menu: ChatMenu? = null) {
         fallback: Boolean = true,
         action: suspend T.() -> Unit,
     ): ChatStep {
-        require(stepMap[this@ChatStep.name] != null) {
+        require(stepMap[this@await.name] != null) {
             "No previous step has been added to the await processing."
         }
-        val previousStep = this@ChatStep
+        val previousStep = this@await
         val step = ChatStep(
             name = "${previousStep.name.substringBefore(SUSPENDED_STEP_MARKER)}$marker",
             suspendable = true,

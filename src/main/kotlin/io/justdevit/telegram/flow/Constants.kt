@@ -67,3 +67,8 @@ val SHORT_MESSAGE_LIFETIME: Duration by lazy {
  * in the context of Telegram bot operations.
  */
 const val TELEGRAM_FLOW_RUNNER_NAME_KEY = "__telegramFlowRunnerName__"
+
+/**
+ * The default label used for representing a hyperlink or link action within Telegram Bot workflows.
+ */
+const val DEFAULT_LINK_LABEL = "➡\uFE0F Link"

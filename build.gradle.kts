@@ -44,7 +44,7 @@ tasks {
         compilerOptions {
             freeCompilerArgs = listOf(
                 "-Xjsr305=strict",
-                "-Xcontext-receivers",
+                "-Xcontext-parameters",
             )
             jvmTarget = JVM_21
         }
