@@ -12,6 +12,7 @@ import com.github.kotlintelegrambot.entities.payments.PaymentInvoiceInfo
 import com.github.kotlintelegrambot.types.TelegramBotResult
 import io.justdevit.telegram.flow.CALLBACK_SUSPENDED_STEP_MARKER
 import io.justdevit.telegram.flow.DATA_DELIMITER
+import io.justdevit.telegram.flow.DEFAULT_LINK_LABEL
 import io.justdevit.telegram.flow.SHORT_MESSAGE_LIFETIME
 import io.justdevit.telegram.flow.SUSPENDED_STEP_MARKER
 import io.justdevit.telegram.flow.extension.sendPdf
@@ -103,7 +104,7 @@ suspend fun ChatStepContext.shortMessage(
  */
 fun ChatStepContext.sendLink(
     url: URL,
-    label: String = "➡\uFE0F Link",
+    label: String = DEFAULT_LINK_LABEL,
     image: TelegramFile? = null,
     parseMode: ParseMode? = MARKDOWN_V2,
     saveResponseId: Boolean = true,
@@ -148,7 +149,7 @@ fun ChatStepContext.sendLink(
  */
 fun ChatStepContext.sendLink(
     url: String,
-    label: String = "➡\uFE0F Link",
+    label: String = DEFAULT_LINK_LABEL,
     image: TelegramFile? = null,
     parseMode: ParseMode? = MARKDOWN_V2,
     saveResponseId: Boolean = true,
