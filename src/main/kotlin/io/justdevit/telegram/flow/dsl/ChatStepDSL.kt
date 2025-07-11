@@ -199,7 +199,7 @@ fun ChatStepContext.location(coordinates: GeoCoordinates, saveResponseId: Boolea
  * It is expected that the type [T] is a subtype of [ChatFlowData].
  *
  * @param T The type of data extending [ChatFlowData].
- * @return The chat flow data associated with the current chat flow, casted to type [T].
+ * @return The chat flow data associated with the current chat flow, cast to type [T].
  * @throws ClassCastException if the flow data cannot be cast to type [T].
  */
 inline fun <reified T : ChatFlowData> ChatStepContext.data(): T = (state.flowInfo?.data ?: throw IllegalStateException("No flow data exist in current chat state.")) as T

@@ -11,13 +11,6 @@ import io.justdevit.telegram.flow.CHAT_PATH_DELIMITER
  * @property suspendable Indicates whether the step is suspendable.
  * @property action The action to execute at this step.
  *
- * @property flow The [ChatFlow] that this step belongs to. Throws an exception if accessed before being set.
- * @property previous The preceding [ChatStep] in the flow, if any.
- * @property next The succeeding [ChatStep] in the flow, if any.
- * @property fullName The fully qualified name of the step, combining the flow ID and step name.
- * @property isFirst Indicates if this step is the first in the flow. Throws an exception if the flow is not set.
- * @property isLast Indicates if this step is the last in the flow. Throws an exception if the flow is not set.
- *
  * @throws IllegalArgumentException if [name] is blank.
  * @throws IllegalStateException if accessing [flow], [isFirst], or [isLast] before the flow is defined.
  */
@@ -34,6 +27,10 @@ data class ChatStep(
     }
 
     private var _flow: ChatFlow? = null
+
+    /**
+     * The [ChatFlow] that this step belongs to. Throws an exception if accessed before being set.
+     */
     var flow: ChatFlow
         get() = _flow ?: throw IllegalStateException("Step has no flow defined yet.")
         set(value) {
@@ -42,12 +39,26 @@ data class ChatStep(
             }
             _flow = value
         }
+
+    /**
+     * The preceding [ChatStep] in the flow, if any.
+     */
     var previous: ChatStep? = null
+
+    /**
+     * The succeeding [ChatStep] in the flow, if any.
+     */
     var next: ChatStep? = null
 
+    /**
+     * The fully qualified name of the step, combining the flow ID and step name.
+     */
     val fullName: String
         get() = if (_flow != null) "${flow.id}$CHAT_PATH_DELIMITER$name" else name
 
+    /**
+     * Indicates if this step is the first in the flow. Throws an exception if the flow is not set.
+     */
     val isFirst: Boolean
         get() {
             if (_flow == null) {
@@ -56,6 +67,9 @@ data class ChatStep(
             return flow.firstStep === this
         }
 
+    /**
+     * Indicates if this step is the last in the flow. Throws an exception if the flow is not set.
+     */
     val isLast: Boolean
         get() {
             if (_flow == null) {
