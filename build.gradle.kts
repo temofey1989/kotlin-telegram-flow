@@ -1,7 +1,7 @@
 import org.gradle.api.tasks.testing.logging.TestLogEvent.FAILED
 import org.gradle.api.tasks.testing.logging.TestLogEvent.PASSED
 import org.gradle.api.tasks.testing.logging.TestLogEvent.SKIPPED
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -28,11 +28,6 @@ dependencies {
 
 java.sourceCompatibility = JavaVersion.VERSION_21
 
-java {
-    withSourcesJar()
-    withJavadocJar()
-}
-
 tasks {
     formatKotlin {
     }
@@ -42,11 +37,11 @@ tasks {
 
     withType<KotlinCompile> {
         compilerOptions {
+            jvmTarget = JvmTarget.fromTarget(java.sourceCompatibility.majorVersion)
             freeCompilerArgs = listOf(
                 "-Xjsr305=strict",
                 "-Xcontext-parameters",
             )
-            jvmTarget = JVM_21
         }
     }
 
